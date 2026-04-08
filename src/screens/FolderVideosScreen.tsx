@@ -5,11 +5,10 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   Image,
-  Dimensions,
-} from 'react-native';
+  Dimensions} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -66,8 +65,7 @@ export function FolderVideosScreen({ navigation, route }: Props) {
     const config: PlaybackConfig = {
       video,
       segments: [{ startSeconds: 0, endSeconds: video.durationSeconds ?? 7200 }],
-      mode: 'full',
-    };
+      mode: 'full'};
     navigation.replace('Playback', { config });
   };
 
@@ -152,8 +150,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
+    borderBottomColor: COLORS.border},
   iconButton: {
     width: 44,
     height: 44,
@@ -165,44 +162,36 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.07,
     shadowRadius: 4,
-    elevation: 2,
-  },
+    elevation: 2},
   backButtonText: {
     fontSize: 26,
     color: COLORS.textSecondary,
-    lineHeight: 30,
-  },
+    lineHeight: 30},
   addButtonText: {
     fontSize: 24,
     color: COLORS.primary,
     fontWeight: '600',
-    lineHeight: 28,
-  },
+    lineHeight: 28},
   headerCenter: {
     flex: 1,
     alignItems: 'center',
-    gap: 2,
-  },
+    gap: 2},
   folderEmoji: { fontSize: 28 },
   folderName: {
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    letterSpacing: -0.3,
-  },
+    letterSpacing: -0.3},
   videoCount: {
     fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
+    color: COLORS.textMuted},
 
   grid: {
     padding: CARD_PADDING,
-    paddingBottom: 32,
-  },
+    paddingBottom: 32},
   gridRow: {
     gap: CARD_GAP,
-    marginBottom: CARD_GAP,
-  },
+    marginBottom: CARD_GAP},
   videoCard: {
     width: CARD_WIDTH,
     backgroundColor: COLORS.surface,
@@ -212,76 +201,61 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 3,
-  },
+    elevation: 3},
   thumbnail: {
     width: CARD_WIDTH,
     height: THUMB_HEIGHT,
-    backgroundColor: COLORS.border,
-  },
+    backgroundColor: COLORS.border},
   thumbnailPlaceholder: {
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   thumbnailPlaceholderIcon: {
     fontSize: 28,
-    color: COLORS.textMuted,
-  },
+    color: COLORS.textMuted},
   playOverlay: {
     ...StyleSheet.absoluteFillObject,
     height: THUMB_HEIGHT,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   playCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
     backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   playIcon: {
     fontSize: 16,
     color: '#fff',
-    marginLeft: 2,
-  },
+    marginLeft: 2},
   videoInfo: {
     padding: 10,
-    gap: 4,
-  },
+    gap: 4},
   videoTitle: {
     fontSize: FONTS.sizes.sm,
     fontWeight: '600',
     color: COLORS.textPrimary,
-    lineHeight: 18,
-  },
+    lineHeight: 18},
   duration: {
     fontSize: FONTS.sizes.xs,
-    color: COLORS.textMuted,
-  },
+    color: COLORS.textMuted},
 
   empty: {
     alignItems: 'center',
     paddingTop: 80,
-    gap: 12,
-  },
+    gap: 12},
   emptyEmoji: { fontSize: 48 },
   emptyText: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textMuted,
-    textAlign: 'center',
-  },
+    textAlign: 'center'},
   emptyButton: {
     marginTop: 8,
     backgroundColor: COLORS.primary,
     paddingVertical: 12,
     paddingHorizontal: 28,
-    borderRadius: 14,
-  },
+    borderRadius: 14},
   emptyButtonText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: FONTS.sizes.md,
-  },
-});
+    fontSize: FONTS.sizes.md}});

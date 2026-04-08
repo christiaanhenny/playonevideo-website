@@ -4,10 +4,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   Animated,
-  StatusBar,
-} from 'react-native';
+  StatusBar} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { COLORS, FONTS } from '../constants';
@@ -26,22 +25,19 @@ export function FinishedScreen({ navigation }: Props) {
       Animated.timing(fadeIn, {
         toValue: 1,
         duration: 700,
-        useNativeDriver: true,
-      }),
+        useNativeDriver: true}),
       Animated.spring(scaleIn, {
         toValue: 1,
         friction: 6,
         tension: 80,
-        useNativeDriver: true,
-      }),
+        useNativeDriver: true}),
     ]).start();
 
     const dimTimer = setTimeout(() => {
       Animated.timing(dimAnim, {
         toValue: 1,
         duration: 3000,
-        useNativeDriver: true,
-      }).start();
+        useNativeDriver: true}).start();
     }, 15_000);
 
     return () => clearTimeout(dimTimer);
@@ -53,8 +49,7 @@ export function FinishedScreen({ navigation }: Props) {
 
   const overlayOpacity = dimAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, 0.8],
-  });
+    outputRange: [0, 0.8]});
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -98,19 +93,16 @@ export function FinishedScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: COLORS.finishedBg,
-  },
+    backgroundColor: COLORS.finishedBg},
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
-    gap: 40,
-  },
+    gap: 40},
   checkWrap: {
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   checkRing: {
     width: 120,
     height: 120,
@@ -118,8 +110,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   checkCircle: {
     width: 88,
     height: 88,
@@ -128,31 +119,26 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   checkIcon: {
     fontSize: 38,
     color: 'rgba(255,255,255,0.85)',
-    fontWeight: '300',
-  },
+    fontWeight: '300'},
   messageArea: {
     alignItems: 'center',
-    gap: 10,
-  },
+    gap: 10},
   heading: {
     fontSize: FONTS.sizes.xxxl + 4,
     fontWeight: '700',
     color: 'rgba(255,255,255,0.95)',
     letterSpacing: 0,
-    textAlign: 'center',
-  },
+    textAlign: 'center'},
   subheading: {
     fontSize: FONTS.sizes.md,
     color: 'rgba(255,255,255,0.65)',
     textAlign: 'center',
     fontWeight: '400',
-    letterSpacing: 0.3,
-  },
+    letterSpacing: 0.3},
   unlockButton: {
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
@@ -161,23 +147,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 36,
     borderRadius: 16,
     alignItems: 'center',
-    gap: 2,
-  },
+    gap: 2},
   unlockLabel: {
     fontSize: FONTS.sizes.xs,
     color: 'rgba(255,255,255,0.4)',
     letterSpacing: 1,
     textTransform: 'uppercase',
-    fontWeight: '600',
-  },
+    fontWeight: '600'},
   unlockText: {
     fontSize: FONTS.sizes.sm,
     color: 'rgba(255,255,255,0.7)',
     letterSpacing: 0.3,
-    fontWeight: '500',
-  },
+    fontWeight: '500'},
   dimOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000',
-  },
-});
+    backgroundColor: '#000'}});

@@ -6,15 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   StatusBar,
   Modal,
   Alert,
   TextInput,
   KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+  Platform} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList, Chapter, PlaybackConfig, PlaybackSegment, Folder } from '../types';
@@ -30,6 +29,36 @@ type Props = {
 };
 
 type PlayMode = 'full' | 'first_chapter' | 'custom';
+
+function AddToChildButton({
+  addedToChild,
+  singleChildName,
+  onPress}: {
+  addedToChild: string | null;
+  singleChildName: string | null;
+  onPress: () => void;
+}) {
+  let label: string;
+  let added = false;
+  if (addedToChild) {
+    label = `✓ Toegevoegd aan ${addedToChild}`;
+    added = true;
+  } else if (singleChildName) {
+    label = `Toevoegen aan ${singleChildName}'s map`;
+  } else {
+    label = '👦  Toevoegen aan kind';
+  }
+  return (
+    <TouchableOpacity
+      style={[styles.folderButton, added && styles.folderButtonAdded]}
+      onPress={onPress}
+      activeOpacity={0.8}>
+      <Text style={[styles.folderButtonText, added && styles.folderButtonTextAdded]}>
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+}
 
 export function VideoSetupScreen({ navigation, route }: Props) {
   const { video } = route.params;
@@ -47,10 +76,12 @@ export function VideoSetupScreen({ navigation, route }: Props) {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [newFolderName, setNewFolderName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
+  const [addedToChild, setAddedToChild] = useState<string | null>(null); // name of child video was added to
 
   useEffect(() => {
     loadDetails();
     checkFavourite();
+    StorageService.getFolders().then(setFolders);
   }, []);
 
   const openFolderModal = async () => {
@@ -58,21 +89,26 @@ export function VideoSetupScreen({ navigation, route }: Props) {
     setFolders(f);
     setNewFolderName('');
     setCreatingFolder(false);
+    // If there's exactly 1 child, add directly without showing a picker
+    if (f.length === 1) {
+      await handleAddToFolder(f[0]);
+      return;
+    }
     setShowFolderModal(true);
   };
 
   const handleAddToFolder = async (folder: Folder) => {
     await StorageService.addVideoToFolder(folder.id, video);
     setShowFolderModal(false);
-    Alert.alert('Toegevoegd', `"${video.title}" staat nu in "${folder.name}".`);
+    setAddedToChild(folder.name);
   };
 
   const handleCreateAndAdd = async () => {
     if (!newFolderName.trim()) return;
-    const folder = await StorageService.createFolder(newFolderName.trim(), '📁');
+    const folder = await StorageService.createFolder(newFolderName.trim(), '👦');
     await StorageService.addVideoToFolder(folder.id, video);
     setShowFolderModal(false);
-    Alert.alert('Toegevoegd', `Map "${folder.name}" aangemaakt met deze video.`);
+    setAddedToChild(folder.name);
   };
 
   const loadDetails = async () => {
@@ -150,8 +186,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
     const config: PlaybackConfig = {
       video,
       segments: buildSegments(),
-      mode: playMode,
-    };
+      mode: playMode};
     relock();
     navigation.navigate('Playback', { config });
   };
@@ -328,13 +363,12 @@ export function VideoSetupScreen({ navigation, route }: Props) {
           <Text style={styles.summaryTime}>{formatSeconds(selectedDuration())}</Text>
         </View>
 
-        {/* Add to folder */}
-        <TouchableOpacity
-          style={styles.folderButton}
+        {/* Add to child */}
+        <AddToChildButton
+          addedToChild={addedToChild}
+          singleChildName={folders.length === 1 ? folders[0].name : null}
           onPress={openFolderModal}
-          activeOpacity={0.8}>
-          <Text style={styles.folderButtonText}>📁  Voeg toe aan map</Text>
-        </TouchableOpacity>
+        />
 
         {/* Start button */}
         <TouchableOpacity
@@ -419,8 +453,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
+    paddingVertical: 10},
   backButton: {
     width: 36,
     height: 36,
@@ -432,27 +465,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.07,
     shadowRadius: 4,
-    elevation: 2,
-  },
+    elevation: 2},
   backButtonText: {
     fontSize: 26,
     color: COLORS.textSecondary,
-    lineHeight: 30,
-  },
+    lineHeight: 30},
   topBarTitle: {
     flex: 1,
     textAlign: 'center',
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    letterSpacing: -0.3,
-  },
+    letterSpacing: -0.3},
   favButton: {
     width: 36,
     height: 36,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   favIcon: { fontSize: 24, color: COLORS.accent },
   thumbnailWrap: {
     marginHorizontal: 16,
@@ -462,52 +491,42 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
-    elevation: 4,
-  },
+    elevation: 4},
   thumbnail: {
     width: '100%',
-    height: 210,
-  },
+    height: 210},
   thumbnailPlaceholder: {
     backgroundColor: COLORS.border,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   thumbnailPlaceholderIcon: {
     fontSize: 48,
-    color: COLORS.textMuted,
-  },
+    color: COLORS.textMuted},
   infoBlock: {
     paddingHorizontal: 16,
     paddingTop: 14,
     paddingBottom: 6,
-    gap: 4,
-  },
+    gap: 4},
   title: {
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',
     color: COLORS.textPrimary,
     lineHeight: 24,
-    letterSpacing: -0.2,
-  },
+    letterSpacing: -0.2},
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
+    gap: 6},
   channel: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.primaryLight,
-    fontWeight: '600',
-  },
+    fontWeight: '600'},
   metaDot: {
     fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
+    color: COLORS.textMuted},
   duration: {
     fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
+    color: COLORS.textMuted},
   section: {
     marginHorizontal: 16,
     marginTop: 16,
@@ -518,27 +537,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
-    elevation: 1,
-  },
+    elevation: 1},
   sectionTitle: {
     fontSize: FONTS.sizes.xs,
     fontWeight: '700',
     color: COLORS.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginBottom: 12,
-  },
+    marginBottom: 12},
   modeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingVertical: 10,
     paddingHorizontal: 8,
-    borderRadius: 10,
-  },
+    borderRadius: 10},
   modeRowActive: {
-    backgroundColor: '#EEF2FF',
-  },
+    backgroundColor: '#EEF2FF'},
   radio: {
     width: 22,
     height: 22,
@@ -546,42 +561,34 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.border,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   radioActive: {
-    borderColor: COLORS.primary,
-  },
+    borderColor: COLORS.primary},
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: COLORS.primary,
-  },
+    backgroundColor: COLORS.primary},
   modeLabel: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textSecondary,
-    fontWeight: '500',
-  },
+    fontWeight: '500'},
   modeLabelActive: {
     color: COLORS.textPrimary,
-    fontWeight: '600',
-  },
+    fontWeight: '600'},
   modeSub: {
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
-    marginTop: 2,
-  },
+    marginTop: 2},
   chapterRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingVertical: 11,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
+    borderBottomColor: COLORS.border},
   chapterRowLast: {
-    borderBottomWidth: 0,
-  },
+    borderBottomWidth: 0},
   checkbox: {
     width: 22,
     height: 22,
@@ -589,23 +596,19 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: COLORS.border,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   checkboxChecked: {
     backgroundColor: COLORS.primary,
-    borderColor: COLORS.primary,
-  },
+    borderColor: COLORS.primary},
   checkmark: { color: '#fff', fontSize: 13, fontWeight: '700' },
   chapterTitle: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.textPrimary,
-    fontWeight: '500',
-  },
+    fontWeight: '500'},
   chapterTimes: {
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
-    marginTop: 2,
-  },
+    marginTop: 2},
   summaryBox: {
     marginHorizontal: 16,
     marginTop: 16,
@@ -615,19 +618,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-  },
+    justifyContent: 'space-between'},
   summaryLabel: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.primary,
-    fontWeight: '600',
-  },
+    fontWeight: '600'},
   summaryTime: {
     fontSize: FONTS.sizes.lg,
     fontWeight: '800',
     color: COLORS.primary,
-    letterSpacing: -0.3,
-  },
+    letterSpacing: -0.3},
   startButton: {
     marginHorizontal: 16,
     marginTop: 16,
@@ -639,19 +639,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 14,
-    elevation: 8,
-  },
+    elevation: 8},
   startButtonDisabled: {
     backgroundColor: COLORS.textMuted,
     shadowOpacity: 0,
-    elevation: 0,
-  },
+    elevation: 0},
   startButtonText: {
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',
     color: '#fff',
-    letterSpacing: 0.2,
-  },
+    letterSpacing: 0.2},
   folderButton: {
     marginHorizontal: 16,
     marginTop: 12,
@@ -660,70 +657,63 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: COLORS.border,
     alignItems: 'center',
-    backgroundColor: COLORS.surface,
-  },
+    backgroundColor: COLORS.surface},
+  folderButtonAdded: {
+    borderColor: COLORS.success,
+    backgroundColor: '#F0FDF4'},
   folderButtonText: {
     fontSize: FONTS.sizes.md,
     fontWeight: '600',
-    color: COLORS.textSecondary,
-  },
+    color: COLORS.textSecondary},
+  folderButtonTextAdded: {
+    color: COLORS.success},
   // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
+    justifyContent: 'flex-end'},
   modalSheet: {
     backgroundColor: COLORS.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
-    paddingBottom: 40,
-  },
+    paddingBottom: 40},
   modalTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    marginBottom: 16,
-  },
+    marginBottom: 16},
   folderOption: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
-    gap: 12,
-  },
+    gap: 12},
   folderOptionEmoji: { fontSize: 24 },
   folderOptionName: {
     fontSize: FONTS.sizes.md,
     fontWeight: '600',
-    color: COLORS.textPrimary,
-  },
+    color: COLORS.textPrimary},
   folderOptionCount: {
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
-    marginTop: 2,
-  },
+    marginTop: 2},
   folderOptionArrow: {
     fontSize: 22,
-    color: COLORS.textMuted,
-  },
+    color: COLORS.textMuted},
   newFolderBtn: {
     paddingVertical: 14,
-    alignItems: 'center',
-  },
+    alignItems: 'center'},
   newFolderBtnText: {
     fontSize: FONTS.sizes.md,
     color: COLORS.accent,
-    fontWeight: '600',
-  },
+    fontWeight: '600'},
   newFolderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingVertical: 10,
-  },
+    paddingVertical: 10},
   newFolderInput: {
     flex: 1,
     backgroundColor: COLORS.surface,
@@ -732,26 +722,20 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.md,
     color: COLORS.textPrimary,
     borderWidth: 1.5,
-    borderColor: COLORS.border,
-  },
+    borderColor: COLORS.border},
   newFolderSave: {
     backgroundColor: COLORS.primary,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 10,
-  },
+    borderRadius: 10},
   newFolderSaveText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: FONTS.sizes.sm,
-  },
+    fontSize: FONTS.sizes.sm},
   modalCancel: {
     marginTop: 8,
     paddingVertical: 12,
-    alignItems: 'center',
-  },
+    alignItems: 'center'},
   modalCancelText: {
     fontSize: FONTS.sizes.md,
-    color: COLORS.textMuted,
-  },
-});
+    color: COLORS.textMuted}});

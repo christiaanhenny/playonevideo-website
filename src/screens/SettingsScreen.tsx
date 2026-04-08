@@ -6,10 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   Alert,
-  StatusBar,
-} from 'react-native';
+  StatusBar} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, AppSettings } from '../types';
 import { COLORS, FONTS } from '../constants';
@@ -60,8 +59,7 @@ export function SettingsScreen({ navigation }: Props) {
           text: 'Doorgaan',
           onPress: () => {
             navigation.navigate('ParentAuth', { returnTo: 'Settings', forceSetup: true });
-          },
-        },
+          }},
       ],
     );
   };
@@ -78,8 +76,7 @@ export function SettingsScreen({ navigation }: Props) {
           onPress: async () => {
             await StorageService.clearRecentSearches();
             Alert.alert('Klaar', 'Sessiedata gewist.');
-          },
-        },
+          }},
       ],
     );
   };
@@ -92,8 +89,7 @@ export function SettingsScreen({ navigation }: Props) {
     value,
     onToggle,
     disabled,
-    isLast,
-  }: {
+    isLast}: {
     label: string;
     sublabel?: string;
     value: boolean;
@@ -226,22 +222,19 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
-    backgroundColor: COLORS.background,
-  },
+    backgroundColor: COLORS.background},
   backBtn: { width: 70 },
   backText: {
     fontSize: FONTS.sizes.md,
     color: COLORS.primaryLight,
-    fontWeight: '600',
-  },
+    fontWeight: '600'},
   headerTitle: {
     flex: 1,
     textAlign: 'center',
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    letterSpacing: -0.3,
-  },
+    letterSpacing: -0.3},
   content: { paddingHorizontal: 16, paddingBottom: 48, paddingTop: 8 },
   sectionHeader: {
     fontSize: FONTS.sizes.xs,
@@ -251,8 +244,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.9,
     marginBottom: 8,
     marginTop: 24,
-    marginLeft: 4,
-  },
+    marginLeft: 4},
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
@@ -261,69 +253,55 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
-    elevation: 1,
-  },
+    elevation: 1},
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
+    borderBottomColor: COLORS.border},
   settingRowLast: {
-    borderBottomWidth: 0,
-  },
+    borderBottomWidth: 0},
   settingLabel: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textPrimary,
-    fontWeight: '500',
-  },
+    fontWeight: '500'},
   settingLabelDisabled: { color: COLORS.textMuted },
   settingSubLabel: {
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
-    marginTop: 2,
-  },
+    marginTop: 2},
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
+    borderBottomColor: COLORS.border},
   actionRowBordered: {
-    borderTopWidth: 0,
-  },
+    borderTopWidth: 0},
   actionRowLast: {
-    borderBottomWidth: 0,
-  },
+    borderBottomWidth: 0},
   actionLabel: {
     flex: 1,
     fontSize: FONTS.sizes.md,
     color: COLORS.textPrimary,
-    fontWeight: '500',
-  },
+    fontWeight: '500'},
   actionChevron: {
     fontSize: FONTS.sizes.xl,
-    color: COLORS.textMuted,
-  },
+    color: COLORS.textMuted},
   badge: {
     backgroundColor: '#EEF2FF',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
-  },
+    borderRadius: 8},
   badgeText: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.primary,
-    fontWeight: '700',
-  },
+    fontWeight: '700'},
   version: {
     textAlign: 'center',
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
-    marginTop: 36,
-  },
-});
+    marginTop: 36}});

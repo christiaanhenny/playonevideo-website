@@ -4,12 +4,13 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   FlatList,
   TextInput,
   Modal,
-} from 'react-native';
+  KeyboardAvoidingView,
+  Platform} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList, Folder } from '../types';
@@ -169,7 +170,8 @@ export function LockedHomeScreen({ navigation }: Props) {
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setShowNewChild(false)}>
-          <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <View style={styles.modalSheet}>
               <View style={styles.modalHandle} />
               <Text style={styles.modalTitle}>Kind toevoegen</Text>
@@ -218,7 +220,7 @@ export function LockedHomeScreen({ navigation }: Props) {
                 </TouchableOpacity>
               </View>
             </View>
-          </TouchableOpacity>
+          </KeyboardAvoidingView>
         </TouchableOpacity>
       </Modal>
     </SafeAreaView>
@@ -234,33 +236,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 12,
-  },
+    paddingBottom: 12},
   logoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
+    gap: 10},
   logo: {
     width: 44,
     height: 44,
     borderRadius: 12,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   logoIcon: { fontSize: 20, color: '#fff', marginLeft: 2 },
   appName: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '800',
     color: COLORS.textPrimary,
-    letterSpacing: -0.5,
-  },
+    letterSpacing: -0.5},
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
+    gap: 8},
   addChildBtn: {
     backgroundColor: COLORS.primary,
     paddingVertical: 10,
@@ -270,13 +267,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 4,
-  },
+    elevation: 4},
   addChildBtnText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: FONTS.sizes.sm,
-  },
+    fontSize: FONTS.sizes.sm},
   settingsBtn: {
     width: 40,
     height: 40,
@@ -285,18 +280,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: COLORS.border,
-  },
+    borderColor: COLORS.border},
   settingsBtnIcon: {
     fontSize: 18,
-    color: COLORS.textSecondary,
-  },
+    color: COLORS.textSecondary},
 
   grid: {
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 16,
-  },
+    paddingBottom: 16},
   gridRow: { gap: 12, marginBottom: 12 },
   childCard: {
     flex: 1,
@@ -310,58 +302,49 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
-    elevation: 5,
-  },
+    elevation: 5},
   childEmoji: { fontSize: 52 },
   childName: {
     fontSize: FONTS.sizes.md,
     fontWeight: '700',
     color: '#fff',
-    textAlign: 'center',
-  },
+    textAlign: 'center'},
   childCount: {
     fontSize: FONTS.sizes.xs,
-    color: 'rgba(255,255,255,0.8)',
-  },
+    color: 'rgba(255,255,255,0.8)'},
 
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 40,
-    gap: 12,
-  },
+    gap: 12},
   emptyEmoji: { fontSize: 64, marginBottom: 4 },
   emptyTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    textAlign: 'center',
-  },
+    textAlign: 'center'},
   emptySubtitle: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-  },
+    lineHeight: 22},
   emptyAddBtn: {
     marginTop: 8,
     backgroundColor: COLORS.primary,
     paddingVertical: 14,
     paddingHorizontal: 28,
-    borderRadius: 16,
-  },
+    borderRadius: 16},
   emptyAddBtnText: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: FONTS.sizes.md,
-  },
+    fontSize: FONTS.sizes.md},
 
   footer: {
     paddingHorizontal: 20,
     paddingBottom: 28,
-    paddingTop: 8,
-  },
+    paddingTop: 8},
   searchButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -374,58 +357,50 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,
-    elevation: 6,
-  },
+    elevation: 6},
   searchButtonIcon: { fontSize: 20 },
   searchButtonText: {
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',
     color: '#fff',
-    letterSpacing: 0.2,
-  },
+    letterSpacing: 0.2},
 
   // Modal (slide from bottom)
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
+    justifyContent: 'flex-end'},
   modalSheet: {
     backgroundColor: COLORS.background,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     padding: 24,
     paddingBottom: 40,
-    gap: 12,
-  },
+    gap: 12},
   modalHandle: {
     width: 40,
     height: 4,
     borderRadius: 2,
     backgroundColor: COLORS.border,
     alignSelf: 'center',
-    marginBottom: 8,
-  },
+    marginBottom: 8},
   modalTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
     textAlign: 'center',
-    marginBottom: 4,
-  },
+    marginBottom: 4},
   modalLabel: {
     fontSize: FONTS.sizes.xs,
     fontWeight: '700',
     color: COLORS.textMuted,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-    marginTop: 4,
-  },
+    marginTop: 4},
   emojiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-  },
+    gap: 8},
   emojiOption: {
     width: 52,
     height: 52,
@@ -434,8 +409,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: COLORS.surface,
     borderWidth: 2,
-    borderColor: 'transparent',
-  },
+    borderColor: 'transparent'},
   emojiSelected: { borderColor: COLORS.primary, backgroundColor: '#EEF2FF' },
   emojiOptionText: { fontSize: 26 },
   modalInput: {
@@ -445,8 +419,7 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.md,
     color: COLORS.textPrimary,
     borderWidth: 1.5,
-    borderColor: COLORS.border,
-  },
+    borderColor: COLORS.border},
   modalButtons: { flexDirection: 'row', gap: 10, marginTop: 4 },
   modalCancel: {
     flex: 1,
@@ -454,23 +427,18 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    alignItems: 'center',
-  },
+    alignItems: 'center'},
   modalCancelText: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textSecondary,
-    fontWeight: '600',
-  },
+    fontWeight: '600'},
   modalCreate: {
     flex: 1,
     paddingVertical: 15,
     borderRadius: 14,
     backgroundColor: COLORS.primary,
-    alignItems: 'center',
-  },
+    alignItems: 'center'},
   modalCreateText: {
     fontSize: FONTS.sizes.md,
     color: '#fff',
-    fontWeight: '700',
-  },
-});
+    fontWeight: '700'}});

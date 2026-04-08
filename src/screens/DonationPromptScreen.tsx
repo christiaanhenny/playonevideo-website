@@ -4,9 +4,8 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
-  StatusBar,
-} from 'react-native';
+  StatusBar} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import { COLORS, FONTS } from '../constants';
@@ -77,8 +76,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-  },
+    padding: 24},
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: 24,
@@ -91,28 +89,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 12,
-    gap: 12,
-  },
+    gap: 12},
   emoji: { fontSize: 48 },
   title: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    textAlign: 'center',
-  },
+    textAlign: 'center'},
   body: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
-  },
+    lineHeight: 22},
   amounts: {
     flexDirection: 'row',
     gap: 10,
     flexWrap: 'wrap',
     justifyContent: 'center',
-    marginTop: 4,
-  },
+    marginTop: 4},
   amountBtn: {
     borderWidth: 2,
     borderColor: COLORS.border,
@@ -120,20 +114,16 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 22,
     minWidth: 70,
-    alignItems: 'center',
-  },
+    alignItems: 'center'},
   amountBtnSelected: {
     borderColor: COLORS.primary,
-    backgroundColor: '#EEF2FF',
-  },
+    backgroundColor: '#EEF2FF'},
   amountText: {
     fontSize: FONTS.sizes.md,
     fontWeight: '600',
-    color: COLORS.textSecondary,
-  },
+    color: COLORS.textSecondary},
   amountTextSelected: {
-    color: COLORS.primary,
-  },
+    color: COLORS.primary},
   comingSoonBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -142,24 +132,19 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 8,
     width: '100%',
-    marginTop: 4,
-  },
+    marginTop: 4},
   comingSoonIcon: { fontSize: 18 },
   comingSoonText: {
     flex: 1,
     fontSize: FONTS.sizes.sm,
     color: '#92400E',
-    lineHeight: 18,
-  },
+    lineHeight: 18},
   dismissBtn: {
     paddingVertical: 10,
     paddingHorizontal: 16,
     minHeight: 44,
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   dismissText: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.textMuted,
-    textDecorationLine: 'underline',
-  },
-});
+    textDecorationLine: 'underline'}});

@@ -4,10 +4,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
-  ActivityIndicator,
-} from 'react-native';
+  ActivityIndicator} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types';
@@ -89,8 +88,7 @@ export function ParentAuthScreen({ navigation, route }: Props) {
         routes: [
           { name: 'LockedHome' },
           { name: returnTo as any, params: returnParams },
-        ],
-      });
+        ]});
     }
   };
 
@@ -264,8 +262,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
-    paddingVertical: 40,
-  },
+    paddingVertical: 40},
   closeButton: {
     position: 'absolute',
     top: 16,
@@ -275,18 +272,15 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     backgroundColor: COLORS.border,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
+    justifyContent: 'center'},
   closeText: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.textSecondary,
-    fontWeight: '600',
-  },
+    fontWeight: '600'},
   centeredBlock: {
     alignItems: 'center',
     width: '100%',
-    gap: 12,
-  },
+    gap: 12},
   iconCircle: {
     width: 88,
     height: 88,
@@ -299,31 +293,26 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
     shadowRadius: 10,
-    elevation: 3,
-  },
+    elevation: 3},
   iconCircleError: {
-    backgroundColor: COLORS.error,
-  },
+    backgroundColor: COLORS.error},
   iconEmoji: { fontSize: 38 },
   cooldownNumber: {
     fontSize: FONTS.sizes.xxl,
     fontWeight: '800',
-    color: '#fff',
-  },
+    color: '#fff'},
   title: {
     fontSize: FONTS.sizes.xxl,
     fontWeight: '800',
     color: COLORS.textPrimary,
     textAlign: 'center',
-    letterSpacing: -0.5,
-  },
+    letterSpacing: -0.5},
   subtitle: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: 4,
-  },
+    marginBottom: 4},
   primaryButton: {
     backgroundColor: COLORS.primary,
     paddingVertical: 16,
@@ -336,18 +325,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
-    elevation: 5,
-  },
+    elevation: 5},
   primaryButtonText: {
     fontSize: FONTS.sizes.md,
     fontWeight: '700',
     color: '#fff',
-    letterSpacing: 0.2,
-  },
+    letterSpacing: 0.2},
   linkButton: { marginTop: 8, padding: 10, minHeight: 44, justifyContent: 'center' },
   linkText: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.primaryLight,
-    fontWeight: '500',
-  },
-});
+    fontWeight: '500'}});

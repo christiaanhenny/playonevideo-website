@@ -6,12 +6,11 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   Modal,
   Alert,
-  ScrollView,
-} from 'react-native';
+  ScrollView} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, Folder } from '../types';
 import { COLORS, FONTS } from '../constants';
@@ -76,8 +75,7 @@ export function ManageFoldersScreen({ navigation }: Props) {
           onPress: async () => {
             await StorageService.deleteFolder(folder.id);
             loadFolders();
-          },
-        },
+          }},
       ],
     );
   };
@@ -227,8 +225,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
+    borderBottomColor: COLORS.border},
   backBtn: { paddingRight: 8 },
   backText: { fontSize: FONTS.sizes.md, color: COLORS.accent, fontWeight: '500' },
   headerTitle: {
@@ -236,14 +233,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
+    color: COLORS.textPrimary},
   addBtn: {
     backgroundColor: COLORS.primary,
     paddingVertical: 6,
     paddingHorizontal: 12,
-    borderRadius: 10,
-  },
+    borderRadius: 10},
   addBtnText: { color: '#fff', fontWeight: '600', fontSize: FONTS.sizes.sm },
   list: { padding: 16, gap: 16 },
   folderCard: {
@@ -254,33 +249,28 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 6,
-    elevation: 2,
-  },
+    elevation: 2},
   folderHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-    gap: 10,
-  },
+    gap: 10},
   folderEmoji: { fontSize: 28 },
   folderMeta: { flex: 1 },
   folderName: {
     fontSize: FONTS.sizes.md,
     fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
+    color: COLORS.textPrimary},
   folderCount: {
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
-    marginTop: 2,
-  },
+    marginTop: 2},
   editBtn: {
     borderWidth: 1,
     borderColor: COLORS.border,
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderRadius: 8,
-  },
+    borderRadius: 8},
   editBtnText: { fontSize: FONTS.sizes.xs, color: COLORS.textSecondary, fontWeight: '500' },
   deleteBtn: { padding: 4 },
   deleteBtnText: { fontSize: FONTS.sizes.md, color: COLORS.error },
@@ -290,69 +280,59 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    gap: 8,
-  },
+    gap: 8},
   videoTitle: {
     flex: 1,
     fontSize: FONTS.sizes.sm,
-    color: COLORS.textPrimary,
-  },
+    color: COLORS.textPrimary},
   removeVideo: { fontSize: FONTS.sizes.sm, color: COLORS.error, padding: 4 },
   emptyFolder: {
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
     fontStyle: 'italic',
-    paddingTop: 4,
-  },
+    paddingTop: 4},
   empty: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
   emptyEmoji: { fontSize: 48, marginBottom: 16 },
   emptyTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    marginBottom: 8,
-  },
+    marginBottom: 8},
   emptySubtitle: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 24,
-  },
+    marginBottom: 24},
   createFirstBtn: {
     backgroundColor: COLORS.primary,
     paddingVertical: 14,
     paddingHorizontal: 32,
-    borderRadius: 14,
-  },
+    borderRadius: 14},
   createFirstBtnText: { color: '#fff', fontWeight: '700', fontSize: FONTS.sizes.md },
   // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
+    justifyContent: 'flex-end'},
   modalSheet: {
     backgroundColor: COLORS.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
-    paddingBottom: 40,
-  },
+    paddingBottom: 40},
   modalTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    marginBottom: 20,
-  },
+    marginBottom: 20},
   modalLabel: {
     fontSize: FONTS.sizes.sm,
     fontWeight: '600',
     color: COLORS.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 10,
-  },
+    marginBottom: 10},
   emojiRow: { marginBottom: 20 },
   emojiOption: {
     width: 48,
@@ -363,8 +343,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
     backgroundColor: COLORS.surface,
     borderWidth: 2,
-    borderColor: 'transparent',
-  },
+    borderColor: 'transparent'},
   emojiOptionActive: { borderColor: COLORS.primary, backgroundColor: '#EEF2FF' },
   emojiOptionText: { fontSize: 24 },
   nameInput: {
@@ -375,8 +354,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    marginBottom: 24,
-  },
+    marginBottom: 24},
   modalButtons: { flexDirection: 'row', gap: 12 },
   cancelBtn: {
     flex: 1,
@@ -384,16 +362,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: COLORS.border,
-    alignItems: 'center',
-  },
+    alignItems: 'center'},
   cancelBtnText: { fontSize: FONTS.sizes.md, color: COLORS.textSecondary, fontWeight: '600' },
   saveBtn: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 14,
     backgroundColor: COLORS.primary,
-    alignItems: 'center',
-  },
+    alignItems: 'center'},
   saveBtnDisabled: { backgroundColor: COLORS.textMuted },
-  saveBtnText: { fontSize: FONTS.sizes.md, color: '#fff', fontWeight: '700' },
-});
+  saveBtnText: { fontSize: FONTS.sizes.md, color: '#fff', fontWeight: '700' }});

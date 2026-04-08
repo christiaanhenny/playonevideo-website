@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,11 @@ import {
   StyleSheet,
   StatusBar,
   Dimensions,
-  SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import { useFocusEffect } from '@react-navigation/native';
 import YoutubePlayer from 'react-native-youtube-iframe';
 import { RootStackParamList } from '../types';
 import { COLORS, FONTS } from '../constants';
@@ -24,8 +23,8 @@ type Props = {
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const VIDEO_HEIGHT = Math.round(SCREEN_WIDTH * 9 / 16);
 
-// YouTube embed error codes
-const EMBED_BLOCKED_CODES = [101, 150]; // video not allowed to be embedded
+// Seconds the YouTube UI is visible before glass drops
+const GLASS_DELAY_SECONDS = 8;
 
 function decodeHtml(text: string): string {
   return text
@@ -39,94 +38,76 @@ export function PlaybackScreen({ navigation, route }: Props) {
   const { config } = route.params;
   const { video, segments } = config;
 
-  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
+  const [glassOn, setGlassOn] = useState(false);
+  const [countdown, setCountdown] = useState(GLASS_DELAY_SECONDS);
   const [embedBlocked, setEmbedBlocked] = useState(false);
-  const playerRef = useRef<any>(null);
-  const segmentCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const seg = segments[currentSegmentIndex];
+  const glassTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const seg = segments[0];
 
-  useFocusEffect(
-    useCallback(() => {
-      startSegmentWatcher();
-      return () => stopSegmentWatcher();
-    }, [currentSegmentIndex, segments]),
-  );
+  // Start countdown when player is ready
+  useEffect(() => {
+    if (!playerReady) return;
 
-  const startSegmentWatcher = () => {
-    stopSegmentWatcher();
-    segmentCheckRef.current = setInterval(async () => {
-      if (!playerRef.current) return;
-      try {
-        const currentTime: number = await playerRef.current.getCurrentTime();
-        const s = segments[currentSegmentIndex];
-        if (currentTime >= s.endSeconds - 0.5) {
-          stopSegmentWatcher();
-          handleSegmentEnd();
+    // Tick countdown every second
+    countdownTimer.current = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) {
+          clearInterval(countdownTimer.current!);
+          return 0;
         }
-      } catch {
-        // player not ready yet
-      }
-    }, 500);
+        return c - 1;
+      });
+    }, 1000);
+
+    // Drop glass after delay
+    glassTimer.current = setTimeout(() => {
+      setGlassOn(true);
+    }, GLASS_DELAY_SECONDS * 1000);
+
+    return () => {
+      if (glassTimer.current) clearTimeout(glassTimer.current);
+      if (countdownTimer.current) clearInterval(countdownTimer.current);
+    };
+  }, [playerReady]);
+
+  const handleExit = () => {
+    if (glassTimer.current) clearTimeout(glassTimer.current);
+    if (countdownTimer.current) clearInterval(countdownTimer.current);
+    navigation.reset({ index: 0, routes: [{ name: 'LockedHome' }] });
   };
 
-  const stopSegmentWatcher = () => {
-    if (segmentCheckRef.current) {
-      clearInterval(segmentCheckRef.current);
-      segmentCheckRef.current = null;
-    }
-  };
-
-  const handleSegmentEnd = () => {
-    const nextIndex = currentSegmentIndex + 1;
-    if (nextIndex < segments.length) {
-      playerRef.current?.seekTo(segments[nextIndex].startSeconds, true);
-      setCurrentSegmentIndex(nextIndex);
-      setIsPlaying(true);
-    } else {
+  const onStateChange = (state: string) => {
+    if (state === 'playing') setIsPlaying(true);
+    if (state === 'paused') setIsPlaying(false);
+    if (state === 'ended') {
+      if (glassTimer.current) clearTimeout(glassTimer.current);
+      if (countdownTimer.current) clearInterval(countdownTimer.current);
       navigation.replace('Finished');
     }
   };
 
-  const handleExit = () => {
-    stopSegmentWatcher();
-    navigation.reset({ index: 0, routes: [{ name: 'LockedHome' }] });
-  };
-
-  const onPlayerReady = () => {
-    setPlayerReady(true);
-    setIsPlaying(true);
-  };
-
-  const onPlayerStateChange = (state: string) => {
-    if (state === 'ended') {
-      stopSegmentWatcher();
-      handleSegmentEnd();
-    }
-  };
-
-  const onPlayerError = (error: string) => {
+  const onError = (error: string) => {
     const code = Number(error);
-    if (EMBED_BLOCKED_CODES.includes(code)) {
-      setEmbedBlocked(true);
-    }
+    if (code === 101 || code === 150) setEmbedBlocked(true);
   };
 
   if (embedBlocked) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={styles.container}>
         <StatusBar hidden />
-        <SafeAreaView style={styles.errorSafe}>
+        <SafeAreaView style={styles.centerSafe}>
           <Text style={styles.errorEmoji}>🚫</Text>
           <Text style={styles.errorTitle}>Video niet beschikbaar</Text>
           <Text style={styles.errorBody}>
             Deze video mag niet buiten YouTube worden afgespeeld.{'\n'}
             Kies een andere video.
           </Text>
-          <TouchableOpacity style={styles.errorButton} onPress={handleExit}>
-            <Text style={styles.errorButtonText}>← Terug naar home</Text>
+          <TouchableOpacity style={styles.backBtn} onPress={handleExit}>
+            <Text style={styles.backBtnText}>← Terug</Text>
           </TouchableOpacity>
         </SafeAreaView>
       </View>
@@ -137,185 +118,173 @@ export function PlaybackScreen({ navigation, route }: Props) {
     <View style={styles.container}>
       <StatusBar hidden />
 
-      {/* Top safe area + exit button */}
-      <SafeAreaView style={styles.topBar}>
-        <TouchableOpacity style={styles.exitButton} onPress={handleExit} activeOpacity={0.7}>
-          <Text style={styles.exitIcon}>✕</Text>
-        </TouchableOpacity>
-        {segments.length > 1 && (
-          <View style={styles.segmentBadge}>
-            <Text style={styles.segmentText}>
-              Deel {currentSegmentIndex + 1}/{segments.length}
-            </Text>
-          </View>
-        )}
-      </SafeAreaView>
-
-      {/* Video — centered vertically in remaining space */}
+      {/* ── LAAG 1: YouTube player ── */}
       <View style={styles.videoWrapper}>
         <View style={styles.videoContainer}>
           <YoutubePlayer
-            ref={playerRef}
             height={VIDEO_HEIGHT}
             width={SCREEN_WIDTH}
             videoId={video.id}
             play={isPlaying}
-            onReady={onPlayerReady}
-            onChangeState={onPlayerStateChange}
-            onError={onPlayerError}
+            onReady={() => setPlayerReady(true)}
+            onChangeState={onStateChange}
+            onError={onError}
             initialPlayerParams={{
               start: seg.startSeconds,
-              controls: false,
+              controls: true,
               rel: false,
               modestbranding: true,
               iv_load_policy: 3,
               fs: false,
-              loop: false,
             }}
-            webViewStyle={styles.webView}
             webViewProps={{
-              allowsFullscreenVideo: false,
               allowsInlineMediaPlayback: true,
               mediaPlaybackRequiresUserAction: false,
+              allowsFullscreenVideo: false,
               scrollEnabled: false,
               bounces: false,
             }}
           />
-          {/* Overlay blocks all YouTube UI touches */}
-          <View
-            style={StyleSheet.absoluteFill}
-            onStartShouldSetResponder={() => true}
-            onMoveShouldSetResponder={() => true}
-          />
-          {/* Loading indicator before player is ready */}
+
+          {/* Spinner */}
           {!playerReady && (
             <View style={styles.loadingOverlay}>
               <ActivityIndicator size="large" color="#fff" />
             </View>
           )}
+
+          {/* ── LAAG 2: Glas ── */}
+          {glassOn && (
+            <View
+              style={StyleSheet.absoluteFill}
+              onStartShouldSetResponder={() => true}
+              onMoveShouldSetResponder={() => true}
+            />
+          )}
         </View>
       </View>
 
-      {/* Controls */}
-      <SafeAreaView style={styles.controls}>
-        <Text style={styles.videoTitle} numberOfLines={2}>
-          {decodeHtml(video.title)}
-        </Text>
+      {/* ── LAAG 3: Onze knoppen ── */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
 
-        <TouchableOpacity
-          style={styles.playPauseBtn}
-          onPress={() => setIsPlaying(p => !p)}
-          activeOpacity={0.85}>
-          <Text style={styles.playPauseIcon}>
-            {isPlaying ? '⏸' : '▶'}
-          </Text>
-        </TouchableOpacity>
-      </SafeAreaView>
+        {/* Bovenste balk: exit + countdown */}
+        <SafeAreaView pointerEvents="box-none">
+          <View style={styles.topBar} pointerEvents="box-none">
+            <TouchableOpacity style={styles.exitCircle} onPress={handleExit} activeOpacity={0.7}>
+              <Text style={styles.exitIcon}>✕</Text>
+            </TouchableOpacity>
+            {playerReady && !glassOn && (
+              <View style={styles.countdownBadge}>
+                <Text style={styles.countdownText}>🔒 {countdown}s</Text>
+              </View>
+            )}
+          </View>
+        </SafeAreaView>
+
+        {/* Onderste balk: pauze knop (alleen als glas aan is) */}
+        {glassOn && (
+          <View style={styles.bottomControls} pointerEvents="box-none">
+            <Text style={styles.videoTitle} numberOfLines={2}>
+              {decodeHtml(video.title)}
+            </Text>
+            <TouchableOpacity
+              style={styles.playPauseBtn}
+              onPress={() => setIsPlaying(p => !p)}
+              activeOpacity={0.85}>
+              <Text style={styles.playPauseIcon}>{isPlaying ? '⏸' : '▶'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleExit} activeOpacity={0.7}>
+              <Text style={styles.backText}>Video werkt niet? ← Terug</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1, backgroundColor: '#0A0A0A' },
+
+  videoWrapper: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  videoContainer: { width: SCREEN_WIDTH, height: VIDEO_HEIGHT, backgroundColor: '#000' },
+
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#0A0A0A',
   },
 
-  // Top bar with exit button
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 8,
     gap: 12,
   },
-  exitButton: {
+  exitCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  exitIcon: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '600',
-  },
-  segmentBadge: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 10,
+  exitIcon: { fontSize: 16, color: '#fff', fontWeight: '600' },
+  countdownBadge: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
+    borderRadius: 14,
   },
-  segmentText: {
+  countdownText: {
+    color: '#fff',
     fontSize: FONTS.sizes.sm,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '600',
+    fontWeight: '700',
   },
 
-  // Video
-  videoWrapper: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  videoContainer: {
-    width: SCREEN_WIDTH,
-    height: VIDEO_HEIGHT,
-    backgroundColor: '#000',
-  },
-  webView: {
-    backgroundColor: '#000',
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#000',
-  },
-
-  // Controls below video
-  controls: {
+  bottomControls: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingBottom: 52,
     paddingHorizontal: 28,
-    paddingBottom: 16,
-    paddingTop: 8,
     alignItems: 'center',
-    gap: 20,
+    gap: 16,
   },
   videoTitle: {
     fontSize: FONTS.sizes.md,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.9)',
     textAlign: 'center',
     lineHeight: 22,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   playPauseBtn: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
     elevation: 8,
   },
-  playPauseIcon: {
-    fontSize: 32,
-    color: '#fff',
-    lineHeight: 36,
+  playPauseIcon: { fontSize: 28, color: '#fff', lineHeight: 32 },
+  backText: {
+    fontSize: FONTS.sizes.sm,
+    color: 'rgba(255,255,255,0.45)',
+    textAlign: 'center',
   },
 
-  // Error screen
-  errorContainer: {
-    flex: 1,
-    backgroundColor: '#0A0A0A',
-  },
-  errorSafe: {
+  centerSafe: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -323,28 +292,19 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   errorEmoji: { fontSize: 56 },
-  errorTitle: {
-    fontSize: FONTS.sizes.xl,
-    fontWeight: '700',
-    color: '#fff',
-    textAlign: 'center',
-  },
+  errorTitle: { fontSize: FONTS.sizes.xl, fontWeight: '700', color: '#fff', textAlign: 'center' },
   errorBody: {
     fontSize: FONTS.sizes.md,
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     lineHeight: 22,
   },
-  errorButton: {
+  backBtn: {
     marginTop: 8,
     backgroundColor: COLORS.primary,
     paddingVertical: 14,
     paddingHorizontal: 28,
     borderRadius: 14,
   },
-  errorButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: FONTS.sizes.md,
-  },
+  backBtnText: { color: '#fff', fontWeight: '700', fontSize: FONTS.sizes.md },
 });
