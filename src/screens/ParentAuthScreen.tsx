@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Alert,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -99,7 +98,7 @@ export function ParentAuthScreen({ navigation, route }: Props) {
         await StorageService.savePin(pin);
         handleSuccess();
       } else {
-        setPinError('PINs do not match. Try again.');
+        setPinError('PINs komen niet overeen. Probeer opnieuw.');
         setNewPin('');
         setMode('setup_pin');
       }
@@ -117,7 +116,8 @@ export function ParentAuthScreen({ navigation, route }: Props) {
       if (attempts >= MAX_PIN_ATTEMPTS) {
         startCooldown();
       } else {
-        setPinError(`Incorrect PIN. ${MAX_PIN_ATTEMPTS - attempts} attempt${MAX_PIN_ATTEMPTS - attempts === 1 ? '' : 's'} remaining.`);
+        const remaining = MAX_PIN_ATTEMPTS - attempts;
+        setPinError(`Onjuiste PIN. Nog ${remaining} poging${remaining === 1 ? '' : 'en'}.`);
       }
     }
   };
@@ -155,15 +155,17 @@ export function ParentAuthScreen({ navigation, route }: Props) {
                 {biometricType === 'Face ID' ? '👤' : '👆'}
               </Text>
             </View>
-            <Text style={styles.title}>{biometricType ?? 'Biometrics'}</Text>
+            <Text style={styles.title}>{biometricType ?? 'Biometrie'}</Text>
             <Text style={styles.subtitle}>
-              Use {biometricType ?? 'biometrics'} to unlock parent controls
+              Gebruik {biometricType ?? 'biometrie'} om de oudercontrole te ontgrendelen
             </Text>
             <TouchableOpacity style={styles.primaryButton} onPress={triggerBiometric} activeOpacity={0.88}>
-              <Text style={styles.primaryButtonText}>Authenticate</Text>
+              <Text style={styles.primaryButtonText}>
+                Verifieer met {biometricType ?? 'biometrie'}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.linkButton} onPress={() => setMode('pin')}>
-              <Text style={styles.linkText}>Use PIN instead</Text>
+              <Text style={styles.linkText}>Gebruik PIN</Text>
             </TouchableOpacity>
           </View>
         );
@@ -174,12 +176,12 @@ export function ParentAuthScreen({ navigation, route }: Props) {
             <View style={styles.iconCircle}>
               <Text style={styles.iconEmoji}>🔐</Text>
             </View>
-            <Text style={styles.title}>Enter PIN</Text>
-            <Text style={styles.subtitle}>Your 4-digit parent PIN</Text>
+            <Text style={styles.title}>Voer PIN in</Text>
+            <Text style={styles.subtitle}>Jouw 4-cijferige ouder-PIN</Text>
             <PinInput onComplete={handlePinComplete} error={pinError} />
             {biometricType && (
               <TouchableOpacity style={styles.linkButton} onPress={triggerBiometric}>
-                <Text style={styles.linkText}>Use {biometricType} instead</Text>
+                <Text style={styles.linkText}>Gebruik {biometricType}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -191,9 +193,9 @@ export function ParentAuthScreen({ navigation, route }: Props) {
             <View style={styles.iconCircle}>
               <Text style={styles.iconEmoji}>🛡️</Text>
             </View>
-            <Text style={styles.title}>Create a PIN</Text>
+            <Text style={styles.title}>Maak een PIN</Text>
             <Text style={styles.subtitle}>
-              Set a 4-digit PIN to protect{'\n'}parent controls
+              Stel een 4-cijferige PIN in{'\n'}om de oudercontrole te beveiligen
             </Text>
             <PinInput onComplete={handlePinComplete} error={pinError} />
           </View>
@@ -205,8 +207,8 @@ export function ParentAuthScreen({ navigation, route }: Props) {
             <View style={styles.iconCircle}>
               <Text style={styles.iconEmoji}>✅</Text>
             </View>
-            <Text style={styles.title}>Confirm PIN</Text>
-            <Text style={styles.subtitle}>Enter the same PIN again</Text>
+            <Text style={styles.title}>Bevestig PIN</Text>
+            <Text style={styles.subtitle}>Voer dezelfde PIN nogmaals in</Text>
             <PinInput onComplete={handlePinComplete} error={pinError} />
           </View>
         );
@@ -217,9 +219,9 @@ export function ParentAuthScreen({ navigation, route }: Props) {
             <View style={[styles.iconCircle, styles.iconCircleError]}>
               <Text style={styles.cooldownNumber}>{cooldownRemaining}</Text>
             </View>
-            <Text style={styles.title}>Too many attempts</Text>
+            <Text style={styles.title}>Te veel pogingen</Text>
             <Text style={styles.subtitle}>
-              Please wait {cooldownRemaining} second{cooldownRemaining !== 1 ? 's' : ''}
+              Wacht nog {cooldownRemaining} seconde{cooldownRemaining !== 1 ? 'n' : ''}
             </Text>
           </View>
         );
@@ -260,9 +262,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 16,
     right: 16,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
@@ -334,7 +336,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     letterSpacing: 0.2,
   },
-  linkButton: { marginTop: 8, padding: 10 },
+  linkButton: { marginTop: 8, padding: 10, minHeight: 44, justifyContent: 'center' },
   linkText: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.primaryLight,

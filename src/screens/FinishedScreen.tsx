@@ -72,8 +72,8 @@ export function FinishedScreen({ navigation }: Props) {
 
         {/* Message */}
         <View style={styles.messageArea}>
-          <Text style={styles.heading}>All done</Text>
-          <Text style={styles.subheading}>That was the video for now.</Text>
+          <Text style={styles.subheading}>Goed gedaan! Dat was de video voor nu.</Text>
+          <Text style={styles.heading}>Klaar! 🎉</Text>
         </View>
 
         {/* Parent unlock */}
@@ -81,7 +81,8 @@ export function FinishedScreen({ navigation }: Props) {
           style={styles.unlockButton}
           onPress={handleUnlock}
           activeOpacity={0.8}>
-          <Text style={styles.unlockText}>Parent Unlock</Text>
+          <Text style={styles.unlockLabel}>Ouder?</Text>
+          <Text style={styles.unlockText}>Tik hier om te ontgrendelen</Text>
         </TouchableOpacity>
 
         {/* Dim overlay */}
@@ -140,29 +141,39 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: FONTS.sizes.xxxl + 4,
-    fontWeight: '200',
-    color: 'rgba(255,255,255,0.92)',
-    letterSpacing: 2,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.95)',
+    letterSpacing: 0,
+    textAlign: 'center',
   },
   subheading: {
     fontSize: FONTS.sizes.md,
-    color: 'rgba(255,255,255,0.4)',
+    color: 'rgba(255,255,255,0.65)',
     textAlign: 'center',
     fontWeight: '400',
     letterSpacing: 0.3,
   },
   unlockButton: {
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    paddingVertical: 14,
+    borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingVertical: 16,
     paddingHorizontal: 36,
-    borderRadius: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+    gap: 2,
+  },
+  unlockLabel: {
+    fontSize: FONTS.sizes.xs,
+    color: 'rgba(255,255,255,0.4)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   unlockText: {
     fontSize: FONTS.sizes.sm,
-    color: 'rgba(255,255,255,0.45)',
-    letterSpacing: 0.8,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 0.3,
     fontWeight: '500',
   },
   dimOverlay: {

@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   StatusBar,
   Image,
+  Dimensions,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
@@ -20,6 +21,12 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'FolderVideos'>;
   route: RouteProp<RootStackParamList, 'FolderVideos'>;
 };
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_GAP = 12;
+const CARD_PADDING = 16;
+const CARD_WIDTH = (SCREEN_WIDTH - CARD_PADDING * 2 - CARD_GAP) / 2;
+const THUMB_HEIGHT = Math.round(CARD_WIDTH * 9 / 16);
 
 function decodeHtml(text: string): string {
   return text
@@ -72,17 +79,22 @@ export function FolderVideosScreen({ navigation, route }: Props) {
       {item.thumbnail ? (
         <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} resizeMode="cover" />
       ) : (
-        <View style={[styles.thumbnail, { backgroundColor: COLORS.border }]} />
+        <View style={[styles.thumbnail, styles.thumbnailPlaceholder]}>
+          <Text style={styles.thumbnailPlaceholderIcon}>▶</Text>
+        </View>
       )}
+      <View style={styles.playOverlay}>
+        <View style={styles.playCircle}>
+          <Text style={styles.playIcon}>▶</Text>
+        </View>
+      </View>
       <View style={styles.videoInfo}>
         <Text style={styles.videoTitle} numberOfLines={2}>
           {decodeHtml(item.title)}
         </Text>
-        <Text style={styles.channelName} numberOfLines={1}>{item.channelName}</Text>
-        {item.duration && <Text style={styles.duration}>{item.duration}</Text>}
-      </View>
-      <View style={styles.playArrow}>
-        <Text style={styles.playArrowText}>▶</Text>
+        {item.duration && (
+          <Text style={styles.duration}>{item.duration}</Text>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -95,32 +107,36 @@ export function FolderVideosScreen({ navigation, route }: Props) {
 
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerTopRow}>
-          <TouchableOpacity style={styles.iconButton} onPress={handleBack} activeOpacity={0.7}>
-            <Text style={styles.backButtonText}>‹</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={handleAddVideo} activeOpacity={0.7}>
-            <Text style={styles.addButtonText}>+</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.folderIconWrap}>
+        <TouchableOpacity style={styles.iconButton} onPress={handleBack} activeOpacity={0.7}>
+          <Text style={styles.backButtonText}>‹</Text>
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
           <Text style={styles.folderEmoji}>{folder.emoji}</Text>
+          <Text style={styles.folderName}>{folder.name}</Text>
+          <Text style={styles.videoCount}>
+            {folder.videos.length} {folder.videos.length === 1 ? 'video' : "video's"}
+          </Text>
         </View>
-        <Text style={styles.folderName}>{folder.name}</Text>
-        <Text style={styles.videoCount}>
-          {folder.videos.length} {folder.videos.length === 1 ? 'video' : 'video\'s'}
-        </Text>
+        <TouchableOpacity style={styles.iconButton} onPress={handleAddVideo} activeOpacity={0.7}>
+          <Text style={styles.addButtonText}>+</Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
         data={folder.videos}
         keyExtractor={item => item.id}
         renderItem={renderVideo}
-        contentContainerStyle={styles.list}
+        numColumns={2}
+        contentContainerStyle={styles.grid}
+        columnWrapperStyle={styles.gridRow}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>Geen video's in deze map</Text>
+            <Text style={styles.emptyEmoji}>🎬</Text>
+            <Text style={styles.emptyText}>Nog geen video's in deze map</Text>
+            <TouchableOpacity style={styles.emptyButton} onPress={handleAddVideo}>
+              <Text style={styles.emptyButtonText}>Video toevoegen</Text>
+            </TouchableOpacity>
           </View>
         }
       />
@@ -131,24 +147,17 @@ export function FolderVideosScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 12,
-    paddingBottom: 20,
     paddingHorizontal: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  headerTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 16,
-  },
   iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
@@ -164,91 +173,115 @@ const styles = StyleSheet.create({
     lineHeight: 30,
   },
   addButtonText: {
-    fontSize: 22,
+    fontSize: 24,
     color: COLORS.primary,
     fontWeight: '600',
-    lineHeight: 26,
+    lineHeight: 28,
   },
-  folderIconWrap: {
-    width: 80,
-    height: 80,
-    borderRadius: 24,
-    backgroundColor: COLORS.surface,
+  headerCenter: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    gap: 2,
+  },
+  folderEmoji: { fontSize: 28 },
+  folderName: {
+    fontSize: FONTS.sizes.lg,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
+  },
+  videoCount: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.textMuted,
+  },
+
+  grid: {
+    padding: CARD_PADDING,
+    paddingBottom: 32,
+  },
+  gridRow: {
+    gap: CARD_GAP,
+    marginBottom: CARD_GAP,
+  },
+  videoCard: {
+    width: CARD_WIDTH,
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
-  folderEmoji: { fontSize: 40 },
-  folderName: {
-    fontSize: FONTS.sizes.xxl,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    letterSpacing: -0.5,
-    marginBottom: 4,
-  },
-  videoCount: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textMuted,
-  },
-  list: { padding: 16, gap: 12 },
-  videoCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
-  },
   thumbnail: {
-    width: 110,
-    height: 72,
+    width: CARD_WIDTH,
+    height: THUMB_HEIGHT,
     backgroundColor: COLORS.border,
   },
+  thumbnailPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  thumbnailPlaceholderIcon: {
+    fontSize: 28,
+    color: COLORS.textMuted,
+  },
+  playOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    height: THUMB_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  playIcon: {
+    fontSize: 16,
+    color: '#fff',
+    marginLeft: 2,
+  },
   videoInfo: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    padding: 10,
+    gap: 4,
   },
   videoTitle: {
     fontSize: FONTS.sizes.sm,
     fontWeight: '600',
     color: COLORS.textPrimary,
-    lineHeight: 20,
-    marginBottom: 4,
-  },
-  channelName: {
-    fontSize: FONTS.sizes.xs,
-    color: COLORS.accent,
-    fontWeight: '500',
+    lineHeight: 18,
   },
   duration: {
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
-    marginTop: 2,
   },
-  playArrow: {
-    paddingRight: 14,
-    paddingLeft: 4,
-  },
-  playArrowText: {
-    fontSize: 16,
-    color: COLORS.primary,
-  },
+
   empty: {
     alignItems: 'center',
-    paddingTop: 60,
+    paddingTop: 80,
+    gap: 12,
   },
+  emptyEmoji: { fontSize: 48 },
   emptyText: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textMuted,
+    textAlign: 'center',
+  },
+  emptyButton: {
+    marginTop: 8,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 14,
+  },
+  emptyButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: FONTS.sizes.md,
   },
 });

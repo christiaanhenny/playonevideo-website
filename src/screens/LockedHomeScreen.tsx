@@ -9,6 +9,7 @@ import {
   FlatList,
   TextInput,
   Modal,
+  ScrollView,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -34,7 +35,6 @@ export function LockedHomeScreen({ navigation }: Props) {
   const [newFolderEmoji, setNewFolderEmoji] = useState('📁');
 
   useEffect(() => {
-    // Gate: require Face ID / PIN on first app open
     if (!initialAuthDone) {
       initialAuthDone = true;
       navigation.navigate('ParentAuth', { returnTo: 'LockedHome' });
@@ -58,7 +58,8 @@ export function LockedHomeScreen({ navigation }: Props) {
 
   const loadFolders = async () => {
     const f = await StorageService.getFolders();
-    setFolders(f);
+    // Only show folders that have videos — empty folders are managed via Settings
+    setFolders(f.filter(folder => folder.videos.length > 0));
   };
 
   const handleFolderPress = (folder: Folder) => {
@@ -72,14 +73,7 @@ export function LockedHomeScreen({ navigation }: Props) {
   const handleCreateFolder = async () => {
     const name = newFolderName.trim();
     if (!name) return;
-    const folder: Folder = {
-      id: Date.now().toString(),
-      name,
-      emoji: newFolderEmoji,
-      videos: [],
-    };
-    const existing = await StorageService.getFolders();
-    await StorageService.saveFolders([...existing, folder]);
+    await StorageService.createFolder(name, newFolderEmoji);
     setShowNewFolder(false);
     setNewFolderName('');
     setNewFolderEmoji('📁');
@@ -94,9 +88,9 @@ export function LockedHomeScreen({ navigation }: Props) {
         onPress={() => handleFolderPress(item)}
         activeOpacity={0.88}>
         <Text style={styles.folderCardEmoji}>{item.emoji}</Text>
-        <Text style={styles.folderCardName}>{item.name}</Text>
+        <Text style={styles.folderCardName} numberOfLines={2}>{item.name}</Text>
         <Text style={styles.folderCardCount}>
-          {item.videos.length} {item.videos.length === 1 ? 'video' : "video's"}
+          {item.videos.length} {item.videos.length === 1 ? "video" : "video's"}
         </Text>
       </TouchableOpacity>
     );
@@ -128,22 +122,23 @@ export function LockedHomeScreen({ navigation }: Props) {
       ) : (
         <View style={styles.emptyState}>
           <Text style={styles.emptyEmoji}>📂</Text>
-          <Text style={styles.emptyTitle}>Nog geen mappen</Text>
+          <Text style={styles.emptyTitle}>Nog geen video's</Text>
           <Text style={styles.emptySubtitle}>
-            Zoek een video en voeg hem toe aan een map.
+            Zoek een video, voeg hem toe aan een map en hij verschijnt hier.
           </Text>
         </View>
       )}
 
-      {/* Footer buttons */}
+      {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.addFolderButton}
           onPress={() => setShowNewFolder(true)}
           activeOpacity={0.88}>
-          <Text style={styles.addFolderButtonIcon}>+</Text>
-          <Text style={styles.addFolderButtonText}>Map toevoegen</Text>
+          <Text style={styles.addFolderIcon}>📁</Text>
+          <Text style={styles.addFolderText}>Nieuwe map</Text>
         </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.searchButton}
           onPress={handleSearch}
@@ -154,54 +149,65 @@ export function LockedHomeScreen({ navigation }: Props) {
       </View>
 
       {/* New folder modal */}
-      <Modal visible={showNewFolder} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Nieuwe map</Text>
+      <Modal
+        visible={showNewFolder}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowNewFolder(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowNewFolder(false)}>
+          <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Nieuwe map</Text>
 
-            <View style={styles.emojiRow}>
-              {EMOJI_OPTIONS.map(emoji => (
+              <Text style={styles.modalLabel}>Kies een icoon</Text>
+              <View style={styles.emojiGrid}>
+                {EMOJI_OPTIONS.map(emoji => (
+                  <TouchableOpacity
+                    key={emoji}
+                    style={[
+                      styles.emojiOption,
+                      newFolderEmoji === emoji && styles.emojiSelected,
+                    ]}
+                    onPress={() => setNewFolderEmoji(emoji)}>
+                    <Text style={styles.emojiOptionText}>{emoji}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.modalLabel}>Naam</Text>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="bijv. Nijntje, Natuur, Muziek"
+                placeholderTextColor={COLORS.textMuted}
+                value={newFolderName}
+                onChangeText={setNewFolderName}
+                maxLength={30}
+                autoFocus
+              />
+
+              <View style={styles.modalButtons}>
                 <TouchableOpacity
-                  key={emoji}
-                  style={[
-                    styles.emojiOption,
-                    newFolderEmoji === emoji && styles.emojiSelected,
-                  ]}
-                  onPress={() => setNewFolderEmoji(emoji)}>
-                  <Text style={styles.emojiOptionText}>{emoji}</Text>
+                  style={styles.modalCancel}
+                  onPress={() => {
+                    setShowNewFolder(false);
+                    setNewFolderName('');
+                    setNewFolderEmoji('📁');
+                  }}>
+                  <Text style={styles.modalCancelText}>Annuleer</Text>
                 </TouchableOpacity>
-              ))}
+                <TouchableOpacity
+                  style={[styles.modalCreate, !newFolderName.trim() && { opacity: 0.4 }]}
+                  onPress={handleCreateFolder}
+                  disabled={!newFolderName.trim()}>
+                  <Text style={styles.modalCreateText}>Maak aan</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Naam van de map"
-              placeholderTextColor={COLORS.textMuted}
-              value={newFolderName}
-              onChangeText={setNewFolderName}
-              maxLength={30}
-              autoFocus
-            />
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={styles.modalCancel}
-                onPress={() => {
-                  setShowNewFolder(false);
-                  setNewFolderName('');
-                  setNewFolderEmoji('📁');
-                }}>
-                <Text style={styles.modalCancelText}>Annuleer</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalCreate, !newFolderName.trim() && { opacity: 0.4 }]}
-                onPress={handleCreateFolder}
-                disabled={!newFolderName.trim()}>
-                <Text style={styles.modalCreateText}>Maak</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </SafeAreaView>
   );
@@ -219,14 +225,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logo: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logoIcon: { fontSize: 16, color: '#fff', marginLeft: 2 },
+  logoIcon: { fontSize: 20, color: '#fff', marginLeft: 2 },
   appName: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '800',
@@ -245,7 +251,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
-    minHeight: 140,
+    minHeight: 148,
     justifyContent: 'center',
     gap: 8,
     shadowColor: '#000',
@@ -254,7 +260,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
-  folderCardEmoji: { fontSize: 40 },
+  folderCardEmoji: { fontSize: 42 },
   folderCardName: {
     fontSize: FONTS.sizes.md,
     fontWeight: '700',
@@ -263,7 +269,7 @@ const styles = StyleSheet.create({
   },
   folderCardCount: {
     fontSize: FONTS.sizes.xs,
-    color: 'rgba(255,255,255,0.75)',
+    color: 'rgba(255,255,255,0.8)',
   },
 
   emptyState: {
@@ -273,7 +279,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     gap: 10,
   },
-  emptyEmoji: { fontSize: 52, marginBottom: 4 },
+  emptyEmoji: { fontSize: 56, marginBottom: 4 },
   emptyTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
@@ -289,7 +295,7 @@ const styles = StyleSheet.create({
 
   footer: {
     paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingBottom: 28,
     paddingTop: 12,
     gap: 10,
   },
@@ -300,19 +306,15 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: COLORS.surface,
     paddingVertical: 14,
-    borderRadius: 18,
+    borderRadius: 16,
     borderWidth: 1.5,
     borderColor: COLORS.border,
   },
-  addFolderButtonIcon: {
-    fontSize: 20,
-    color: COLORS.primary,
-    fontWeight: '700',
-  },
-  addFolderButtonText: {
+  addFolderIcon: { fontSize: 16 },
+  addFolderText: {
     fontSize: FONTS.sizes.md,
     fontWeight: '600',
-    color: COLORS.textPrimary,
+    color: COLORS.textSecondary,
   },
   searchButton: {
     flexDirection: 'row',
@@ -320,15 +322,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     backgroundColor: COLORS.primary,
-    paddingVertical: 16,
+    paddingVertical: 18,
     borderRadius: 18,
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.35,
     shadowRadius: 12,
     elevation: 6,
   },
-  searchButtonIcon: { fontSize: 18 },
+  searchButtonIcon: { fontSize: 20 },
   searchButtonText: {
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',
@@ -336,70 +338,73 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Modal styles
+  // Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    paddingHorizontal: 28,
+    paddingHorizontal: 24,
   },
   modalContent: {
     backgroundColor: COLORS.background,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 24,
-    gap: 16,
+    gap: 12,
   },
   modalTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
     textAlign: 'center',
+    marginBottom: 4,
   },
-  emojiRow: {
+  modalLabel: {
+    fontSize: FONTS.sizes.xs,
+    fontWeight: '700',
+    color: COLORS.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 4,
+  },
+  emojiGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
     gap: 8,
   },
   emojiOption: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: 12,
-    backgroundColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  emojiSelected: {
-    backgroundColor: COLORS.primaryLight,
+    backgroundColor: COLORS.surface,
     borderWidth: 2,
-    borderColor: COLORS.primary,
+    borderColor: 'transparent',
   },
-  emojiOptionText: { fontSize: 22 },
+  emojiSelected: { borderColor: COLORS.primary, backgroundColor: '#EEF2FF' },
+  emojiOptionText: { fontSize: 24 },
   modalInput: {
     backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderRadius: 12,
+    padding: 14,
     fontSize: FONTS.sizes.md,
     color: COLORS.textPrimary,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: COLORS.border,
   },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
+  modalButtons: { flexDirection: 'row', gap: 10, marginTop: 4 },
   modalCancel: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 14,
-    backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
     alignItems: 'center',
   },
   modalCancelText: {
     fontSize: FONTS.sizes.md,
-    fontWeight: '600',
     color: COLORS.textSecondary,
+    fontWeight: '600',
   },
   modalCreate: {
     flex: 1,
@@ -410,7 +415,7 @@ const styles = StyleSheet.create({
   },
   modalCreateText: {
     fontSize: FONTS.sizes.md,
-    fontWeight: '700',
     color: '#fff',
+    fontWeight: '700',
   },
 });

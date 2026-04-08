@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Alert,
   StatusBar,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,7 +16,7 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'DonationPrompt'>;
 };
 
-const AMOUNTS = ['$5', '$10', '$20', '$100'];
+const AMOUNTS = ['€5', '€10', '€20', '€50'];
 
 export function DonationPromptScreen({ navigation }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
@@ -27,34 +26,16 @@ export function DonationPromptScreen({ navigation }: Props) {
     navigation.goBack();
   };
 
-  const handleDonate = async (amount: string) => {
-    // In production: implement StoreKit / in-app purchase or link to payment page
-    // For MVP: open a donation link or show a coming-soon alert
-    Alert.alert(
-      'Thank you! 🙏',
-      `Payment processing will be available in the next release. You selected ${amount}.`,
-      [
-        {
-          text: 'OK',
-          onPress: async () => {
-            await DonationService.recordDonation();
-            navigation.goBack();
-          },
-        },
-      ],
-    );
-  };
-
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <StatusBar barStyle="dark-content" backgroundColor="rgba(0,0,0,0.4)" />
       <View style={styles.container}>
         <View style={styles.card}>
           <Text style={styles.emoji}>💙</Text>
-          <Text style={styles.title}>Enjoying the app?</Text>
+          <Text style={styles.title}>Bevalt de app?</Text>
           <Text style={styles.body}>
-            Help us keep it simple and calm for families.{'\n'}
-            PlayOneVideo is built by parents, for parents.
+            Help ons om de app rustig en simpel te houden voor gezinnen.{'\n'}
+            PlayOneVideo is gemaakt door ouders, voor ouders.
           </Text>
 
           {/* Amount grid */}
@@ -72,20 +53,17 @@ export function DonationPromptScreen({ navigation }: Props) {
             ))}
           </View>
 
-          {/* Donate button */}
-          <TouchableOpacity
-            style={[styles.donateBtn, !selected && styles.donateBtnDisabled]}
-            disabled={!selected}
-            onPress={() => selected && handleDonate(selected)}
-            activeOpacity={0.85}>
-            <Text style={styles.donateBtnText}>
-              {selected ? `Support with ${selected}` : 'Select an amount'}
+          {/* Coming soon notice */}
+          <View style={styles.comingSoonBox}>
+            <Text style={styles.comingSoonIcon}>🚧</Text>
+            <Text style={styles.comingSoonText}>
+              Online doneren komt binnenkort beschikbaar. Bedankt voor je interesse!
             </Text>
-          </TouchableOpacity>
+          </View>
 
           {/* Dismiss */}
           <TouchableOpacity style={styles.dismissBtn} onPress={handleDismiss}>
-            <Text style={styles.dismissText}>Maybe later</Text>
+            <Text style={styles.dismissText}>Misschien later</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -103,7 +81,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: COLORS.surface,
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 28,
     alignItems: 'center',
     width: '100%',
@@ -113,13 +91,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 12,
+    gap: 12,
   },
-  emoji: { fontSize: 48, marginBottom: 12 },
+  emoji: { fontSize: 48 },
   title: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
     color: COLORS.textPrimary,
-    marginBottom: 12,
     textAlign: 'center',
   },
   body: {
@@ -127,21 +105,20 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 24,
   },
   amounts: {
     flexDirection: 'row',
     gap: 10,
-    marginBottom: 20,
     flexWrap: 'wrap',
     justifyContent: 'center',
+    marginTop: 4,
   },
   amountBtn: {
     borderWidth: 2,
     borderColor: COLORS.border,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
     minWidth: 70,
     alignItems: 'center',
   },
@@ -157,24 +134,29 @@ const styles = StyleSheet.create({
   amountTextSelected: {
     color: COLORS.primary,
   },
-  donateBtn: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    width: '100%',
+  comingSoonBox: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    backgroundColor: '#FEF9C3',
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
+    width: '100%',
+    marginTop: 4,
   },
-  donateBtnDisabled: {
-    backgroundColor: COLORS.border,
+  comingSoonIcon: { fontSize: 18 },
+  comingSoonText: {
+    flex: 1,
+    fontSize: FONTS.sizes.sm,
+    color: '#92400E',
+    lineHeight: 18,
   },
-  donateBtnText: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: '600',
-    color: '#fff',
+  dismissBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    minHeight: 44,
+    justifyContent: 'center',
   },
-  dismissBtn: { padding: 8 },
   dismissText: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.textMuted,

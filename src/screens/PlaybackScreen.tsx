@@ -145,9 +145,11 @@ export function PlaybackScreen({ navigation, route }: Props) {
           {video.title.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code))).replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&apos;/g, "'")}
         </Text>
           {segments.length > 1 && (
-            <Text style={styles.segmentInfo}>
-              Deel {currentSegmentIndex + 1} van {segments.length}
-            </Text>
+            <View style={styles.segmentBadge}>
+              <Text style={styles.segmentInfo}>
+                Deel {currentSegmentIndex + 1} van {segments.length}
+              </Text>
+            </View>
           )}
         </View>
 
@@ -196,10 +198,18 @@ const styles = StyleSheet.create({
     color: '#fff',
     lineHeight: 26,
   },
+  segmentBadge: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
   segmentInfo: {
     fontSize: FONTS.sizes.sm,
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 6,
+    color: 'rgba(255,255,255,0.85)',
+    fontWeight: '600',
   },
   buttonRow: {
     flexDirection: 'row',

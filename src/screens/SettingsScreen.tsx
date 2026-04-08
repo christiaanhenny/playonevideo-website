@@ -52,12 +52,12 @@ export function SettingsScreen({ navigation }: Props) {
 
   const handleChangePin = () => {
     Alert.alert(
-      'Change PIN',
-      'You will be asked to set a new PIN.',
+      'Wijzig PIN',
+      'Je wordt gevraagd een nieuwe PIN in te stellen.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Annuleer', style: 'cancel' },
         {
-          text: 'Continue',
+          text: 'Doorgaan',
           onPress: () => {
             navigation.navigate('ParentAuth', { returnTo: 'Settings', forceSetup: true });
           },
@@ -68,16 +68,16 @@ export function SettingsScreen({ navigation }: Props) {
 
   const handleClearData = () => {
     Alert.alert(
-      'Clear Session Data',
-      'This will clear recent searches and watch history. Favourites and settings are kept.',
+      'Sessiedata wissen',
+      'Dit wist recente zoekopdrachten. Favorieten en instellingen blijven bewaard.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: 'Annuleer', style: 'cancel' },
         {
-          text: 'Clear',
+          text: 'Wissen',
           style: 'destructive',
           onPress: async () => {
             await StorageService.clearRecentSearches();
-            Alert.alert('Done', 'Session data cleared.');
+            Alert.alert('Klaar', 'Sessiedata gewist.');
           },
         },
       ],
@@ -124,9 +124,9 @@ export function SettingsScreen({ navigation }: Props) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>‹ Back</Text>
+          <Text style={styles.backText}>‹ Terug</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>Instellingen</Text>
         <View style={{ width: 70 }} />
       </View>
 
@@ -146,12 +146,12 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         {/* Authentication */}
-        <Text style={styles.sectionHeader}>Authentication</Text>
+        <Text style={styles.sectionHeader}>Beveiliging</Text>
         <View style={styles.card}>
           {biometricAvailable && (
             <Row
-              label={`Use ${biometricType ?? 'Biometrics'}`}
-              sublabel="Unlock with Face ID or Touch ID"
+              label={`Gebruik ${biometricType ?? 'biometrie'}`}
+              sublabel="Ontgrendel met Face ID of Touch ID"
               value={settings.biometricEnabled}
               onToggle={v => updateSetting('biometricEnabled', v)}
             />
@@ -159,18 +159,18 @@ export function SettingsScreen({ navigation }: Props) {
           <TouchableOpacity
             style={[styles.actionRow, biometricAvailable && styles.actionRowBordered]}
             onPress={handleChangePin}>
-            <Text style={styles.actionLabel}>{hasPin ? 'Change PIN' : 'Set PIN'}</Text>
+            <Text style={styles.actionLabel}>{hasPin ? 'Wijzig PIN' : 'PIN instellen'}</Text>
             <Text style={styles.actionChevron}>›</Text>
           </TouchableOpacity>
         </View>
 
         {/* Session */}
-        <Text style={styles.sectionHeader}>Session</Text>
+        <Text style={styles.sectionHeader}>Sessie</Text>
         <View style={styles.card}>
           <View style={[styles.settingRow, styles.settingRowLast]}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.settingLabel}>Auto-lock after 60 seconds</Text>
-              <Text style={styles.settingSubLabel}>Parent mode expires when inactive</Text>
+              <Text style={styles.settingLabel}>Automatisch vergrendelen na 60s</Text>
+              <Text style={styles.settingSubLabel}>Oudermode vervalt bij inactiviteit</Text>
             </View>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>60s</Text>
@@ -179,11 +179,11 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         {/* Content */}
-        <Text style={styles.sectionHeader}>Content</Text>
+        <Text style={styles.sectionHeader}>Inhoud</Text>
         <View style={styles.card}>
           <Row
-            label="Favourites"
-            sublabel="Save videos for quick access"
+            label="Favorieten"
+            sublabel="Sla video's op voor snelle toegang"
             value={settings.favouritesEnabled}
             onToggle={v => updateSetting('favouritesEnabled', v)}
             isLast
@@ -191,11 +191,11 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         {/* Support */}
-        <Text style={styles.sectionHeader}>Support</Text>
+        <Text style={styles.sectionHeader}>Ondersteuning</Text>
         <View style={styles.card}>
           <Row
-            label="Show donation prompts"
-            sublabel="Occasional reminders to support the app"
+            label="Toon donatieverzoeken"
+            sublabel="Af en toe een herinnering om de app te steunen"
             value={settings.donationPromptsEnabled}
             onToggle={v => updateSetting('donationPromptsEnabled', v)}
             isLast
@@ -203,15 +203,15 @@ export function SettingsScreen({ navigation }: Props) {
         </View>
 
         {/* Data */}
-        <Text style={styles.sectionHeader}>Data</Text>
+        <Text style={styles.sectionHeader}>Gegevens</Text>
         <View style={styles.card}>
           <TouchableOpacity style={[styles.actionRow, styles.actionRowLast]} onPress={handleClearData}>
-            <Text style={[styles.actionLabel, { color: COLORS.error }]}>Clear Session Data</Text>
+            <Text style={[styles.actionLabel, { color: COLORS.error }]}>Sessiedata wissen</Text>
             <Text style={[styles.actionChevron, { color: COLORS.error }]}>›</Text>
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.version}>PlayOneVideo · Built with care for families</Text>
+        <Text style={styles.version}>PlayOneVideo · Gemaakt voor gezinnen</Text>
       </ScrollView>
     </SafeAreaView>
   );

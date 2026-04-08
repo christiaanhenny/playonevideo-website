@@ -77,7 +77,7 @@ export function SearchScreen({ navigation }: Props) {
       const searches = await StorageService.getRecentSearches();
       setRecentSearches(searches);
     } catch (e: any) {
-      setError('Search failed. Check your internet connection.');
+      setError('Zoeken mislukt. Controleer je internetverbinding.');
     } finally {
       setLoading(false);
     }
@@ -106,8 +106,8 @@ export function SearchScreen({ navigation }: Props) {
       return (
         <View style={styles.emptyState}>
           <Text style={styles.emptyEmoji}>🔍</Text>
-          <Text style={styles.emptyTitle}>No results found</Text>
-          <Text style={styles.emptySubtitle}>Try a different search term</Text>
+          <Text style={styles.emptyTitle}>Geen resultaten</Text>
+          <Text style={styles.emptySubtitle}>Probeer een andere zoekterm</Text>
         </View>
       );
     }
@@ -115,7 +115,7 @@ export function SearchScreen({ navigation }: Props) {
       <View style={styles.suggestions}>
         {recentSearches.length > 0 && (
           <View style={styles.suggestionSection}>
-            <Text style={styles.sectionTitle}>Recent</Text>
+            <Text style={styles.sectionTitle}>Recent gezocht</Text>
             <View style={styles.sectionCard}>
               {recentSearches.map((s, idx) => (
                 <TouchableOpacity
@@ -139,7 +139,7 @@ export function SearchScreen({ navigation }: Props) {
         )}
         {favourites.length > 0 && (
           <View style={[styles.suggestionSection, { marginTop: 24 }]}>
-            <Text style={styles.sectionTitle}>Favourites</Text>
+            <Text style={styles.sectionTitle}>Favorieten</Text>
             {favourites.map(f => (
               <SearchResultCard key={f.id} item={f} onPress={handleResultPress} />
             ))}
@@ -180,7 +180,7 @@ export function SearchScreen({ navigation }: Props) {
               <Text style={styles.headerIconText}>✕</Text>
             </View>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Choose a Video</Text>
+          <Text style={styles.headerTitle}>Kies een video</Text>
           <TouchableOpacity onPress={handleSettingsPress} style={styles.headerIconBtn}>
             <View style={styles.headerIconWrap}>
               <Text style={styles.headerIconText}>⚙</Text>
@@ -194,7 +194,7 @@ export function SearchScreen({ navigation }: Props) {
             <Text style={styles.searchIcon}>🔍</Text>
             <TextInput
               style={styles.searchInput}
-              placeholder="Search YouTube..."
+              placeholder="Zoek op YouTube..."
               placeholderTextColor={COLORS.textMuted}
               value={query}
               onChangeText={setQuery}
@@ -222,7 +222,7 @@ export function SearchScreen({ navigation }: Props) {
                 style={[styles.tab, tab === t && styles.tabActive]}
                 onPress={() => handleTabChange(t)}>
                 <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-                  {t === 'videos' ? 'Videos' : 'Playlists'}
+                  {t === 'videos' ? "Video's" : 'Afspeellijsten'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -238,7 +238,7 @@ export function SearchScreen({ navigation }: Props) {
         {loading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Searching...</Text>
+            <Text style={styles.loadingText}>Zoeken...</Text>
           </View>
         )}
 
@@ -303,9 +303,9 @@ const styles = StyleSheet.create({
   },
   headerIconBtn: { padding: 4 },
   headerIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',

@@ -80,6 +80,14 @@ export function VideoSetupScreen({ navigation, route }: Props) {
     try {
       const details = await YouTubeService.fetchVideoDetails(video.id);
       if (details) {
+        if (!details.embeddable) {
+          Alert.alert(
+            'Video niet beschikbaar',
+            'De rechtenhouder van deze video heeft het afspelen in externe apps geblokkeerd. Kies een andere video.',
+          );
+          setLoading(false);
+          return;
+        }
         const dur = details.durationSeconds;
         setTotalDurationSeconds(dur);
         const parsed = parseChaptersFromDescription(details.description, dur);
@@ -179,7 +187,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Text style={styles.backButtonText}>‹</Text>
           </TouchableOpacity>
-          <Text style={styles.topBarTitle}>Video Setup</Text>
+          <Text style={styles.topBarTitle}>Video instellen</Text>
           <TouchableOpacity style={styles.favButton} onPress={toggleFavourite}>
             <Text style={styles.favIcon}>{isFavourite ? '★' : '☆'}</Text>
           </TouchableOpacity>
@@ -219,7 +227,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
         {/* Playback mode — only shown when video has chapters */}
         {!loading && chapters.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>What to play</Text>
+          <Text style={styles.sectionTitle}>Wat afspelen</Text>
 
           <TouchableOpacity
             style={[styles.modeRow, playMode === 'full' && styles.modeRowActive]}
@@ -230,7 +238,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.modeLabel, playMode === 'full' && styles.modeLabelActive]}>
-                Full video
+                Hele video
               </Text>
               {totalDurationSeconds > 0 && (
                 <Text style={styles.modeSub}>{formatSeconds(totalDurationSeconds)}</Text>
@@ -248,7 +256,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.modeLabel, playMode === 'first_chapter' && styles.modeLabelActive]}>
-                  First chapter only
+                  Alleen eerste hoofdstuk
                 </Text>
                 <Text style={styles.modeSub}>
                   {chapters[0].title} · {formatSeconds(chapters[0].endSeconds - chapters[0].startSeconds)}
@@ -265,9 +273,16 @@ export function VideoSetupScreen({ navigation, route }: Props) {
               <View style={[styles.radio, playMode === 'custom' && styles.radioActive]}>
                 {playMode === 'custom' && <View style={styles.radioDot} />}
               </View>
-              <Text style={[styles.modeLabel, playMode === 'custom' && styles.modeLabelActive]}>
-                Select chapters
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.modeLabel, playMode === 'custom' && styles.modeLabelActive]}>
+                  Kies hoofdstukken
+                </Text>
+                {playMode === 'custom' && selectedChapters.size > 0 && (
+                  <Text style={styles.modeSub}>
+                    {selectedChapters.size} van {chapters.length} geselecteerd
+                  </Text>
+                )}
+              </View>
             </TouchableOpacity>
           )}
         </View>
@@ -276,7 +291,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
         {/* Chapter list (custom mode) */}
         {playMode === 'custom' && chapters.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Chapters</Text>
+            <Text style={styles.sectionTitle}>Hoofdstukken</Text>
             {loading ? (
               <ActivityIndicator color={COLORS.primary} style={{ paddingVertical: 12 }} />
             ) : (
@@ -309,7 +324,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
 
         {/* Duration summary */}
         <View style={styles.summaryBox}>
-          <Text style={styles.summaryLabel}>Duration</Text>
+          <Text style={styles.summaryLabel}>Speelduur</Text>
           <Text style={styles.summaryTime}>{formatSeconds(selectedDuration())}</Text>
         </View>
 
@@ -328,7 +343,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
           disabled={!canStart}
           activeOpacity={0.88}>
           <Text style={styles.startButtonText}>
-            {canStart ? 'Start Video' : 'Select at least one chapter'}
+            {canStart ? 'Start' : 'Kies minimaal één hoofdstuk'}
           </Text>
         </TouchableOpacity>
 
