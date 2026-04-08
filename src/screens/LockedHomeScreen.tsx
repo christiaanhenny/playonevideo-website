@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   SafeAreaView,
   StatusBar,
   FlatList,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -15,16 +17,28 @@ import { COLORS, FONTS } from '../constants';
 import { StorageService } from '../services/StorageService';
 import { DonationService } from '../services/DonationService';
 
+// Track whether initial app-open auth has been done this session
+let initialAuthDone = false;
+
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'LockedHome'>;
 };
 
 const FOLDER_COLORS = ['#4F7FFF', '#FF6B6B', '#43D19E', '#FF9F43', '#A55EEA', '#26C6DA'];
+const EMOJI_OPTIONS = ['📁', '⭐', '🎬', '🎵', '🐾', '🌈', '🚀', '🦁', '🌊', '🍕', '🎨', '🏆'];
 
 export function LockedHomeScreen({ navigation }: Props) {
   const [folders, setFolders] = useState<Folder[]>([]);
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [newFolderEmoji, setNewFolderEmoji] = useState('📁');
 
   useEffect(() => {
+    // Gate: require Face ID / PIN on first app open
+    if (!initialAuthDone) {
+      initialAuthDone = true;
+      navigation.navigate('ParentAuth', { returnTo: 'LockedHome' });
+    }
     init();
   }, []);
 
@@ -44,7 +58,7 @@ export function LockedHomeScreen({ navigation }: Props) {
 
   const loadFolders = async () => {
     const f = await StorageService.getFolders();
-    setFolders(f.filter(folder => folder.videos.length > 0));
+    setFolders(f);
   };
 
   const handleFolderPress = (folder: Folder) => {
@@ -53,6 +67,23 @@ export function LockedHomeScreen({ navigation }: Props) {
 
   const handleSearch = () => {
     navigation.navigate('ParentAuth', { returnTo: 'Search' });
+  };
+
+  const handleCreateFolder = async () => {
+    const name = newFolderName.trim();
+    if (!name) return;
+    const folder: Folder = {
+      id: Date.now().toString(),
+      name,
+      emoji: newFolderEmoji,
+      videos: [],
+    };
+    const existing = await StorageService.getFolders();
+    await StorageService.saveFolders([...existing, folder]);
+    setShowNewFolder(false);
+    setNewFolderName('');
+    setNewFolderEmoji('📁');
+    loadFolders();
   };
 
   const renderFolder = ({ item, index }: { item: Folder; index: number }) => {
@@ -104,8 +135,15 @@ export function LockedHomeScreen({ navigation }: Props) {
         </View>
       )}
 
-      {/* Search button — always visible, requires parent auth */}
+      {/* Footer buttons */}
       <View style={styles.footer}>
+        <TouchableOpacity
+          style={styles.addFolderButton}
+          onPress={() => setShowNewFolder(true)}
+          activeOpacity={0.88}>
+          <Text style={styles.addFolderButtonIcon}>+</Text>
+          <Text style={styles.addFolderButtonText}>Map toevoegen</Text>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.searchButton}
           onPress={handleSearch}
@@ -114,6 +152,57 @@ export function LockedHomeScreen({ navigation }: Props) {
           <Text style={styles.searchButtonText}>Video zoeken</Text>
         </TouchableOpacity>
       </View>
+
+      {/* New folder modal */}
+      <Modal visible={showNewFolder} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Nieuwe map</Text>
+
+            <View style={styles.emojiRow}>
+              {EMOJI_OPTIONS.map(emoji => (
+                <TouchableOpacity
+                  key={emoji}
+                  style={[
+                    styles.emojiOption,
+                    newFolderEmoji === emoji && styles.emojiSelected,
+                  ]}
+                  onPress={() => setNewFolderEmoji(emoji)}>
+                  <Text style={styles.emojiOptionText}>{emoji}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Naam van de map"
+              placeholderTextColor={COLORS.textMuted}
+              value={newFolderName}
+              onChangeText={setNewFolderName}
+              maxLength={30}
+              autoFocus
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => {
+                  setShowNewFolder(false);
+                  setNewFolderName('');
+                  setNewFolderEmoji('📁');
+                }}>
+                <Text style={styles.modalCancelText}>Annuleer</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalCreate, !newFolderName.trim() && { opacity: 0.4 }]}
+                onPress={handleCreateFolder}
+                disabled={!newFolderName.trim()}>
+                <Text style={styles.modalCreateText}>Maak</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -202,6 +291,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 24,
     paddingTop: 12,
+    gap: 10,
+  },
+  addFolderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: COLORS.surface,
+    paddingVertical: 14,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+  },
+  addFolderButtonIcon: {
+    fontSize: 20,
+    color: COLORS.primary,
+    fontWeight: '700',
+  },
+  addFolderButtonText: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
   },
   searchButton: {
     flexDirection: 'row',
@@ -223,5 +334,83 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
     letterSpacing: 0.2,
+  },
+
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    paddingHorizontal: 28,
+  },
+  modalContent: {
+    backgroundColor: COLORS.background,
+    borderRadius: 20,
+    padding: 24,
+    gap: 16,
+  },
+  modalTitle: {
+    fontSize: FONTS.sizes.xl,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  emojiRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  emojiOption: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emojiSelected: {
+    backgroundColor: COLORS.primaryLight,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+  },
+  emojiOptionText: { fontSize: 22 },
+  modalInput: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: FONTS.sizes.md,
+    color: COLORS.textPrimary,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalCancel: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: COLORS.surface,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  modalCreate: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 14,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+  },
+  modalCreateText: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

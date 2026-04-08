@@ -48,7 +48,7 @@ export function FinishedScreen({ navigation }: Props) {
   }, []);
 
   const handleUnlock = () => {
-    navigation.navigate('ParentAuth', { returnTo: 'Search' });
+    navigation.navigate('ParentAuth', { returnTo: 'LockedHome' });
   };
 
   const overlayOpacity = dimAnim.interpolate({
