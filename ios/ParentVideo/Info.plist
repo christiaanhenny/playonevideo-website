@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>ParentVideo</string>
+	<string>PlayOneVideo</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -59,7 +59,7 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 	<key>NSFaceIDUsageDescription</key>
-	<string>OneVideo uses Face ID to protect parent controls from children.</string>
+	<string>PlayOneVideo uses Face ID to protect parent controls from children.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is not used by this app.</string>
 </dict>
