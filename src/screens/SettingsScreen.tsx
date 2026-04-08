@@ -134,13 +134,13 @@ export function SettingsScreen({ navigation }: Props) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
 
-        {/* Folders */}
-        <Text style={styles.sectionHeader}>Mappen</Text>
+        {/* Kinderen */}
+        <Text style={styles.sectionHeader}>Kinderen</Text>
         <View style={styles.card}>
           <TouchableOpacity
             style={[styles.actionRow, styles.actionRowLast]}
             onPress={() => navigation.navigate('ManageFolders')}>
-            <Text style={styles.actionLabel}>📁  Mappen beheren</Text>
+            <Text style={styles.actionLabel}>👦  Kinderen beheren</Text>
             <Text style={styles.actionChevron}>›</Text>
           </TouchableOpacity>
         </View>

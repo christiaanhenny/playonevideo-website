@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,6 @@ import {
   FlatList,
   TextInput,
   Modal,
-  ScrollView,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -25,14 +24,14 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'LockedHome'>;
 };
 
-const FOLDER_COLORS = ['#4F7FFF', '#FF6B6B', '#43D19E', '#FF9F43', '#A55EEA', '#26C6DA'];
-const EMOJI_OPTIONS = ['📁', '⭐', '🎬', '🎵', '🐾', '🌈', '🚀', '🦁', '🌊', '🍕', '🎨', '🏆'];
+const CHILD_COLORS = ['#4F7FFF', '#FF6B6B', '#43D19E', '#FF9F43', '#A55EEA', '#26C6DA'];
+const FACE_EMOJIS = ['👦', '👧', '👶', '🧒', '🧑', '👱', '👦🏽', '👧🏽', '👦🏿', '👧🏿', '🧒🏽', '🐣'];
 
 export function LockedHomeScreen({ navigation }: Props) {
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [showNewFolder, setShowNewFolder] = useState(false);
-  const [newFolderName, setNewFolderName] = useState('');
-  const [newFolderEmoji, setNewFolderEmoji] = useState('📁');
+  const [children, setChildren] = useState<Folder[]>([]);
+  const [showNewChild, setShowNewChild] = useState(false);
+  const [newChildName, setNewChildName] = useState('');
+  const [newChildEmoji, setNewChildEmoji] = useState('👦');
 
   useEffect(() => {
     if (!initialAuthDone) {
@@ -44,7 +43,7 @@ export function LockedHomeScreen({ navigation }: Props) {
 
   useFocusEffect(
     useCallback(() => {
-      loadFolders();
+      loadChildren();
     }, []),
   );
 
@@ -56,40 +55,39 @@ export function LockedHomeScreen({ navigation }: Props) {
     }
   };
 
-  const loadFolders = async () => {
+  const loadChildren = async () => {
     const f = await StorageService.getFolders();
-    // Only show folders that have videos — empty folders are managed via Settings
-    setFolders(f.filter(folder => folder.videos.length > 0));
+    setChildren(f.filter(folder => folder.videos.length > 0));
   };
 
-  const handleFolderPress = (folder: Folder) => {
-    navigation.navigate('FolderVideos', { folderId: folder.id });
+  const handleChildPress = (child: Folder) => {
+    navigation.navigate('FolderVideos', { folderId: child.id });
   };
 
   const handleSearch = () => {
     navigation.navigate('ParentAuth', { returnTo: 'Search' });
   };
 
-  const handleCreateFolder = async () => {
-    const name = newFolderName.trim();
+  const handleCreateChild = async () => {
+    const name = newChildName.trim();
     if (!name) return;
-    await StorageService.createFolder(name, newFolderEmoji);
-    setShowNewFolder(false);
-    setNewFolderName('');
-    setNewFolderEmoji('📁');
-    loadFolders();
+    await StorageService.createFolder(name, newChildEmoji);
+    setShowNewChild(false);
+    setNewChildName('');
+    setNewChildEmoji('👦');
+    loadChildren();
   };
 
-  const renderFolder = ({ item, index }: { item: Folder; index: number }) => {
-    const color = FOLDER_COLORS[index % FOLDER_COLORS.length];
+  const renderChild = ({ item, index }: { item: Folder; index: number }) => {
+    const color = CHILD_COLORS[index % CHILD_COLORS.length];
     return (
       <TouchableOpacity
-        style={[styles.folderCard, { backgroundColor: color }]}
-        onPress={() => handleFolderPress(item)}
+        style={[styles.childCard, { backgroundColor: color }]}
+        onPress={() => handleChildPress(item)}
         activeOpacity={0.88}>
-        <Text style={styles.folderCardEmoji}>{item.emoji}</Text>
-        <Text style={styles.folderCardName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.folderCardCount}>
+        <Text style={styles.childEmoji}>{item.emoji}</Text>
+        <Text style={styles.childName} numberOfLines={1}>{item.name}</Text>
+        <Text style={styles.childCount}>
           {item.videos.length} {item.videos.length === 1 ? "video" : "video's"}
         </Text>
       </TouchableOpacity>
@@ -102,43 +100,56 @@ export function LockedHomeScreen({ navigation }: Props) {
 
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.logo}>
-          <Text style={styles.logoIcon}>▶</Text>
+        <View style={styles.logoRow}>
+          <View style={styles.logo}>
+            <Text style={styles.logoIcon}>▶</Text>
+          </View>
+          <Text style={styles.appName}>PlayOneVideo</Text>
         </View>
-        <Text style={styles.appName}>PlayOneVideo</Text>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.addChildBtn}
+            onPress={() => setShowNewChild(true)}
+            activeOpacity={0.85}>
+            <Text style={styles.addChildBtnText}>+ Kind</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.settingsBtn}
+            onPress={() => navigation.navigate('ParentAuth', { returnTo: 'Settings' })}
+            activeOpacity={0.85}>
+            <Text style={styles.settingsBtnIcon}>⚙</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Folder grid or empty state */}
-      {folders.length > 0 ? (
+      {/* Children grid or empty state */}
+      {children.length > 0 ? (
         <FlatList
-          data={folders}
+          data={children}
           keyExtractor={item => item.id}
-          renderItem={renderFolder}
+          renderItem={renderChild}
           numColumns={2}
-          contentContainerStyle={styles.folderGrid}
-          columnWrapperStyle={styles.folderRow}
+          contentContainerStyle={styles.grid}
+          columnWrapperStyle={styles.gridRow}
           showsVerticalScrollIndicator={false}
         />
       ) : (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>📂</Text>
-          <Text style={styles.emptyTitle}>Nog geen video's</Text>
+          <Text style={styles.emptyEmoji}>👨‍👩‍👧</Text>
+          <Text style={styles.emptyTitle}>Voeg een kind toe</Text>
           <Text style={styles.emptySubtitle}>
-            Zoek een video, voeg hem toe aan een map en hij verschijnt hier.
+            Maak een profiel aan voor elk kind en zoek video's die bij hen passen.
           </Text>
+          <TouchableOpacity
+            style={styles.emptyAddBtn}
+            onPress={() => setShowNewChild(true)}>
+            <Text style={styles.emptyAddBtnText}>+ Kind toevoegen</Text>
+          </TouchableOpacity>
         </View>
       )}
 
-      {/* Footer */}
+      {/* Zoek-knop onderaan */}
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.addFolderButton}
-          onPress={() => setShowNewFolder(true)}
-          activeOpacity={0.88}>
-          <Text style={styles.addFolderIcon}>📁</Text>
-          <Text style={styles.addFolderText}>Nieuwe map</Text>
-        </TouchableOpacity>
-
         <TouchableOpacity
           style={styles.searchButton}
           onPress={handleSearch}
@@ -148,43 +159,44 @@ export function LockedHomeScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* New folder modal */}
+      {/* Nieuw kind modal */}
       <Modal
-        visible={showNewFolder}
+        visible={showNewChild}
         transparent
-        animationType="fade"
-        onRequestClose={() => setShowNewFolder(false)}>
+        animationType="slide"
+        onRequestClose={() => setShowNewChild(false)}>
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={() => setShowNewFolder(false)}>
+          onPress={() => setShowNewChild(false)}>
           <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Nieuwe map</Text>
+            <View style={styles.modalSheet}>
+              <View style={styles.modalHandle} />
+              <Text style={styles.modalTitle}>Kind toevoegen</Text>
 
-              <Text style={styles.modalLabel}>Kies een icoon</Text>
+              <Text style={styles.modalLabel}>Kies een gezichtje</Text>
               <View style={styles.emojiGrid}>
-                {EMOJI_OPTIONS.map(emoji => (
+                {FACE_EMOJIS.map(emoji => (
                   <TouchableOpacity
                     key={emoji}
                     style={[
                       styles.emojiOption,
-                      newFolderEmoji === emoji && styles.emojiSelected,
+                      newChildEmoji === emoji && styles.emojiSelected,
                     ]}
-                    onPress={() => setNewFolderEmoji(emoji)}>
+                    onPress={() => setNewChildEmoji(emoji)}>
                     <Text style={styles.emojiOptionText}>{emoji}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={styles.modalLabel}>Naam</Text>
+              <Text style={styles.modalLabel}>Naam van het kind</Text>
               <TextInput
                 style={styles.modalInput}
-                placeholder="bijv. Nijntje, Natuur, Muziek"
+                placeholder="bijv. Emma, Noah, Lotte..."
                 placeholderTextColor={COLORS.textMuted}
-                value={newFolderName}
-                onChangeText={setNewFolderName}
-                maxLength={30}
+                value={newChildName}
+                onChangeText={setNewChildName}
+                maxLength={20}
                 autoFocus
               />
 
@@ -192,17 +204,17 @@ export function LockedHomeScreen({ navigation }: Props) {
                 <TouchableOpacity
                   style={styles.modalCancel}
                   onPress={() => {
-                    setShowNewFolder(false);
-                    setNewFolderName('');
-                    setNewFolderEmoji('📁');
+                    setShowNewChild(false);
+                    setNewChildName('');
+                    setNewChildEmoji('👦');
                   }}>
                   <Text style={styles.modalCancelText}>Annuleer</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.modalCreate, !newFolderName.trim() && { opacity: 0.4 }]}
-                  onPress={handleCreateFolder}
-                  disabled={!newFolderName.trim()}>
-                  <Text style={styles.modalCreateText}>Maak aan</Text>
+                  style={[styles.modalCreate, !newChildName.trim() && { opacity: 0.4 }]}
+                  onPress={handleCreateChild}
+                  disabled={!newChildName.trim()}>
+                  <Text style={styles.modalCreateText}>Toevoegen</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -219,9 +231,14 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12,
+  },
+  logoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   logo: {
@@ -239,19 +256,54 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     letterSpacing: -0.5,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  addChildBtn: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  addChildBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: FONTS.sizes.sm,
+  },
+  settingsBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+  },
+  settingsBtnIcon: {
+    fontSize: 18,
+    color: COLORS.textSecondary,
+  },
 
-  folderGrid: {
+  grid: {
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 16,
   },
-  folderRow: { gap: 12, marginBottom: 12 },
-  folderCard: {
+  gridRow: { gap: 12, marginBottom: 12 },
+  childCard: {
     flex: 1,
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 20,
     alignItems: 'center',
-    minHeight: 148,
+    minHeight: 155,
     justifyContent: 'center',
     gap: 8,
     shadowColor: '#000',
@@ -260,14 +312,14 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 5,
   },
-  folderCardEmoji: { fontSize: 42 },
-  folderCardName: {
+  childEmoji: { fontSize: 52 },
+  childName: {
     fontSize: FONTS.sizes.md,
     fontWeight: '700',
     color: '#fff',
     textAlign: 'center',
   },
-  folderCardCount: {
+  childCount: {
     fontSize: FONTS.sizes.xs,
     color: 'rgba(255,255,255,0.8)',
   },
@@ -277,9 +329,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 40,
-    gap: 10,
+    gap: 12,
   },
-  emptyEmoji: { fontSize: 56, marginBottom: 4 },
+  emptyEmoji: { fontSize: 64, marginBottom: 4 },
   emptyTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',
@@ -292,29 +344,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
   },
+  emptyAddBtn: {
+    marginTop: 8,
+    backgroundColor: COLORS.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 16,
+  },
+  emptyAddBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: FONTS.sizes.md,
+  },
 
   footer: {
     paddingHorizontal: 20,
     paddingBottom: 28,
-    paddingTop: 12,
-    gap: 10,
-  },
-  addFolderButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: COLORS.surface,
-    paddingVertical: 14,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: COLORS.border,
-  },
-  addFolderIcon: { fontSize: 16 },
-  addFolderText: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: '600',
-    color: COLORS.textSecondary,
+    paddingTop: 8,
   },
   searchButton: {
     flexDirection: 'row',
@@ -338,18 +384,27 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // Modal
+  // Modal (slide from bottom)
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
   },
-  modalContent: {
+  modalSheet: {
     backgroundColor: COLORS.background,
-    borderRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 24,
+    paddingBottom: 40,
     gap: 12,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: COLORS.border,
+    alignSelf: 'center',
+    marginBottom: 8,
   },
   modalTitle: {
     fontSize: FONTS.sizes.xl,
@@ -372,9 +427,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emojiOption: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+    width: 52,
+    height: 52,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: COLORS.surface,
@@ -382,10 +437,10 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   emojiSelected: { borderColor: COLORS.primary, backgroundColor: '#EEF2FF' },
-  emojiOptionText: { fontSize: 24 },
+  emojiOptionText: { fontSize: 26 },
   modalInput: {
     backgroundColor: COLORS.surface,
-    borderRadius: 12,
+    borderRadius: 14,
     padding: 14,
     fontSize: FONTS.sizes.md,
     color: COLORS.textPrimary,
@@ -395,7 +450,7 @@ const styles = StyleSheet.create({
   modalButtons: { flexDirection: 'row', gap: 10, marginTop: 4 },
   modalCancel: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 15,
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: COLORS.border,
@@ -408,7 +463,7 @@ const styles = StyleSheet.create({
   },
   modalCreate: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: 15,
     borderRadius: 14,
     backgroundColor: COLORS.primary,
     alignItems: 'center',

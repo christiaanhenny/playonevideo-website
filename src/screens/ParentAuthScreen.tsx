@@ -79,10 +79,18 @@ export function ParentAuthScreen({ navigation, route }: Props) {
 
   const handleSuccess = () => {
     unlock();
+    // Always reset the stack so auth modal is fully dismissed and
+    // the target screen appears as a clean push — no popup stacking.
     if (returnTo === 'LockedHome') {
       navigation.reset({ index: 0, routes: [{ name: 'LockedHome' }] });
     } else {
-      (navigation as any).navigate(returnTo, returnParams);
+      navigation.reset({
+        index: 1,
+        routes: [
+          { name: 'LockedHome' },
+          { name: returnTo as any, params: returnParams },
+        ],
+      });
     }
   };
 

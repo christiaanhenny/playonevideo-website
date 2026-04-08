@@ -21,14 +21,14 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ManageFolders'>;
 };
 
-const EMOJI_OPTIONS = ['📁', '⭐', '🎬', '🎵', '🐾', '🌈', '🚀', '🦁', '🌊', '🍕', '🎨', '🏆'];
+const EMOJI_OPTIONS = ['👦', '👧', '👶', '🧒', '🧑', '👱', '👦🏽', '👧🏽', '🧒🏽', '🐣', '⭐', '🦁'];
 
 export function ManageFoldersScreen({ navigation }: Props) {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [newName, setNewName] = useState('');
-  const [newEmoji, setNewEmoji] = useState('📁');
+  const [newEmoji, setNewEmoji] = useState('👦');
 
   useEffect(() => {
     loadFolders();
@@ -134,9 +134,9 @@ export function ManageFoldersScreen({ navigation }: Props) {
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Terug</Text>
+          <Text style={styles.backText}>‹ Terug</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Mappen beheren</Text>
+        <Text style={styles.headerTitle}>Kinderen beheren</Text>
         <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
           <Text style={styles.addBtnText}>+ Nieuw</Text>
         </TouchableOpacity>

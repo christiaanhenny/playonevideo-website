@@ -39,10 +39,11 @@ export const YouTubeService = {
       .filter((item: any) => item.id?.videoId)
       .map((item: any) => item.id.videoId);
 
-    // Fetch video details (duration) in one batch call
+    // Fetch video details (duration + embeddable status) in one batch call
     let durations: Record<string, number> = {};
+    let embeddable: Record<string, boolean> = {};
     if (videoIds.length > 0 && type === 'video') {
-      durations = await YouTubeService.fetchVideoDurations(videoIds);
+      ({ durations, embeddable } = await YouTubeService.fetchVideoDurations(videoIds));
     }
 
     return data.items
@@ -50,6 +51,9 @@ export const YouTubeService = {
         const isVideo = item.id?.videoId;
         const isPlaylist = item.id?.playlistId;
         if (!isVideo && !isPlaylist) return null;
+
+        // Skip videos that cannot be embedded (e.g. blocked by WildBrain)
+        if (isVideo && embeddable[item.id.videoId] === false) return null;
 
         const durationSec = isVideo ? durations[item.id.videoId] ?? 0 : undefined;
 
@@ -70,20 +74,25 @@ export const YouTubeService = {
       .filter(Boolean) as VideoResult[];
   },
 
-  async fetchVideoDurations(videoIds: string[]): Promise<Record<string, number>> {
+  async fetchVideoDurations(videoIds: string[]): Promise<{
+    durations: Record<string, number>;
+    embeddable: Record<string, boolean>;
+  }> {
     const params = new URLSearchParams({
-      part: 'contentDetails',
+      part: 'contentDetails,status',
       id: videoIds.join(','),
       key: YOUTUBE_API_KEY,
     });
     const res = await fetch(`${YOUTUBE_API_BASE}/videos?${params}`);
-    if (!res.ok) return {};
+    if (!res.ok) return { durations: {}, embeddable: {} };
     const data = await res.json();
-    const result: Record<string, number> = {};
+    const durations: Record<string, number> = {};
+    const embeddable: Record<string, boolean> = {};
     for (const item of data.items ?? []) {
-      result[item.id] = parseISO8601Duration(item.contentDetails.duration);
+      durations[item.id] = parseISO8601Duration(item.contentDetails.duration);
+      embeddable[item.id] = item.status?.embeddable !== false;
     }
-    return result;
+    return { durations, embeddable };
   },
 
   async fetchVideoDetails(videoId: string): Promise<{
@@ -92,9 +101,10 @@ export const YouTubeService = {
     title: string;
     channelName: string;
     thumbnail: string;
+    embeddable: boolean;
   } | null> {
     const params = new URLSearchParams({
-      part: 'snippet,contentDetails',
+      part: 'snippet,contentDetails,status',
       id: videoId,
       key: YOUTUBE_API_KEY,
     });
@@ -109,6 +119,7 @@ export const YouTubeService = {
       title: item.snippet.title,
       channelName: item.snippet.channelTitle,
       thumbnail: item.snippet.thumbnails?.medium?.url ?? '',
+      embeddable: item.status?.embeddable !== false,
     };
   },
 };

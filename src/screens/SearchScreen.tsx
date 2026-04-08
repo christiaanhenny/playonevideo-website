@@ -97,7 +97,7 @@ export function SearchScreen({ navigation }: Props) {
 
   const handleSettingsPress = () => {
     resetUnlockTimer();
-    navigation.navigate('ParentAuth', { returnTo: 'Settings' });
+    navigation.navigate('Settings');
   };
 
   const renderEmpty = () => {
@@ -177,7 +177,7 @@ export function SearchScreen({ navigation }: Props) {
             onPress={() => { relock(); navigation.navigate('LockedHome'); }}
             style={styles.headerIconBtn}>
             <View style={styles.headerIconWrap}>
-              <Text style={styles.headerIconText}>✕</Text>
+              <Text style={styles.headerBackText}>‹</Text>
             </View>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Kies een video</Text>
@@ -318,6 +318,11 @@ const styles = StyleSheet.create({
   headerIconText: {
     fontSize: FONTS.sizes.md,
     color: COLORS.textSecondary,
+  },
+  headerBackText: {
+    fontSize: 28,
+    color: COLORS.textSecondary,
+    lineHeight: 32,
   },
   headerTitle: {
     flex: 1,

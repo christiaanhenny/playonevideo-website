@@ -21,7 +21,7 @@ export function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator
         initialRouteName="LockedHome"
-        screenOptions={{ headerShown: false, animation: 'fade' }}>
+        screenOptions={{ headerShown: false, animation: 'default' }}>
         <Stack.Screen name="LockedHome" component={LockedHomeScreen} />
         <Stack.Screen
           name="ParentAuth"
@@ -33,12 +33,12 @@ export function AppNavigator() {
         <Stack.Screen
           name="Playback"
           component={PlaybackScreen}
-          options={{ orientation: 'all' }}
+          options={{ gestureEnabled: false, animation: 'fade', orientation: 'portrait' }}
         />
         <Stack.Screen
           name="Finished"
           component={FinishedScreen}
-          options={{ gestureEnabled: false }}
+          options={{ gestureEnabled: false, animation: 'fade' }}
         />
         <Stack.Screen
           name="DonationPrompt"
@@ -46,11 +46,7 @@ export function AppNavigator() {
           options={{ presentation: 'transparentModal', animation: 'fade' }}
         />
         <Stack.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen
-          name="FolderVideos"
-          component={FolderVideosScreen}
-          options={{ gestureEnabled: false }}
-        />
+        <Stack.Screen name="FolderVideos" component={FolderVideosScreen} />
         <Stack.Screen name="ManageFolders" component={ManageFoldersScreen} />
       </Stack.Navigator>
     </NavigationContainer>
