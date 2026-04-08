@@ -23,8 +23,8 @@ type Props = {
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const VIDEO_HEIGHT = Math.round(SCREEN_WIDTH * 9 / 16);
 
-// Seconds the YouTube UI is visible before glass drops
-const GLASS_DELAY_SECONDS = 8;
+// Fallback: drop glass after this many seconds even if play never detected
+const GLASS_FALLBACK_SECONDS = 30;
 
 function decodeHtml(text: string): string {
   return text
@@ -38,40 +38,24 @@ export function PlaybackScreen({ navigation, route }: Props) {
   const { config } = route.params;
   const { video, segments } = config;
 
-  const [isPlaying, setIsPlaying] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
   const [glassOn, setGlassOn] = useState(false);
-  const [countdown, setCountdown] = useState(GLASS_DELAY_SECONDS);
   const [embedBlocked, setEmbedBlocked] = useState(false);
 
   const glassTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const playDetected = useRef(false);
   const seg = segments[0];
 
-  // Start countdown when player is ready
+  const dropGlassAfter = (ms: number) => {
+    if (glassTimer.current) clearTimeout(glassTimer.current);
+    glassTimer.current = setTimeout(() => setGlassOn(true), ms);
+  };
+
+  // Fallback: drop glass after 30s regardless
   useEffect(() => {
     if (!playerReady) return;
-
-    // Tick countdown every second
-    countdownTimer.current = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) {
-          clearInterval(countdownTimer.current!);
-          return 0;
-        }
-        return c - 1;
-      });
-    }, 1000);
-
-    // Drop glass after delay
-    glassTimer.current = setTimeout(() => {
-      setGlassOn(true);
-    }, GLASS_DELAY_SECONDS * 1000);
-
-    return () => {
-      if (glassTimer.current) clearTimeout(glassTimer.current);
-      if (countdownTimer.current) clearInterval(countdownTimer.current);
-    };
+    dropGlassAfter(GLASS_FALLBACK_SECONDS * 1000);
+    return () => { if (glassTimer.current) clearTimeout(glassTimer.current); };
   }, [playerReady]);
 
   const handleExit = () => {
@@ -81,11 +65,13 @@ export function PlaybackScreen({ navigation, route }: Props) {
   };
 
   const onStateChange = (state: string) => {
-    if (state === 'playing') setIsPlaying(true);
-    if (state === 'paused') setIsPlaying(false);
+    if (state === 'playing' && !playDetected.current) {
+      // First play detected — drop glass after 1 second
+      playDetected.current = true;
+      dropGlassAfter(1000);
+    }
     if (state === 'ended') {
       if (glassTimer.current) clearTimeout(glassTimer.current);
-      if (countdownTimer.current) clearInterval(countdownTimer.current);
       navigation.replace('Finished');
     }
   };
@@ -125,7 +111,7 @@ export function PlaybackScreen({ navigation, route }: Props) {
             height={VIDEO_HEIGHT}
             width={SCREEN_WIDTH}
             videoId={video.id}
-            play={isPlaying}
+            play={false}
             onReady={() => setPlayerReady(true)}
             onChangeState={onStateChange}
             onError={onError}
@@ -173,11 +159,6 @@ export function PlaybackScreen({ navigation, route }: Props) {
             <TouchableOpacity style={styles.exitCircle} onPress={handleExit} activeOpacity={0.7}>
               <Text style={styles.exitIcon}>✕</Text>
             </TouchableOpacity>
-            {playerReady && !glassOn && (
-              <View style={styles.countdownBadge}>
-                <Text style={styles.countdownText}>🔒 {countdown}s</Text>
-              </View>
-            )}
           </View>
         </SafeAreaView>
 
@@ -187,12 +168,6 @@ export function PlaybackScreen({ navigation, route }: Props) {
             <Text style={styles.videoTitle} numberOfLines={2}>
               {decodeHtml(video.title)}
             </Text>
-            <TouchableOpacity
-              style={styles.playPauseBtn}
-              onPress={() => setIsPlaying(p => !p)}
-              activeOpacity={0.85}>
-              <Text style={styles.playPauseIcon}>{isPlaying ? '⏸' : '▶'}</Text>
-            </TouchableOpacity>
             <TouchableOpacity onPress={handleExit} activeOpacity={0.7}>
               <Text style={styles.backText}>Video werkt niet? ← Terug</Text>
             </TouchableOpacity>
