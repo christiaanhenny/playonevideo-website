@@ -80,7 +80,7 @@ export function LockedHomeScreen({ navigation }: Props) {
         <View style={styles.logo}>
           <Text style={styles.logoIcon}>▶</Text>
         </View>
-        <Text style={styles.appName}>OneVideo</Text>
+        <Text style={styles.appName}>PlayOneVideo</Text>
       </View>
 
       {/* Folder grid or empty state */}

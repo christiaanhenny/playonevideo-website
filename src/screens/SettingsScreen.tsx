@@ -211,7 +211,7 @@ export function SettingsScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.version}>OneVideo · Built with care for families</Text>
+        <Text style={styles.version}>PlayOneVideo · Built with care for families</Text>
       </ScrollView>
     </SafeAreaView>
   );

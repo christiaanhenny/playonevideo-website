@@ -54,7 +54,7 @@ export function DonationPromptScreen({ navigation }: Props) {
           <Text style={styles.title}>Enjoying the app?</Text>
           <Text style={styles.body}>
             Help us keep it simple and calm for families.{'\n'}
-            OneVideo is built by parents, for parents.
+            PlayOneVideo is built by parents, for parents.
           </Text>
 
           {/* Amount grid */}
