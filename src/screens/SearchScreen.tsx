@@ -9,9 +9,12 @@ import {
   ActivityIndicator,
   StatusBar,
   KeyboardAvoidingView,
-  Platform} from 'react-native';
+  Platform,
+  useWindowDimensions} from 'react-native';
+import { ChevronLeft, Settings, Search, X, Clock, ChevronRight } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 import { useIsFocused } from '@react-navigation/native';
 import { RootStackParamList, VideoResult } from '../types';
 import { COLORS, FONTS, YOUTUBE_API_KEY } from '../constants';
@@ -22,14 +25,19 @@ import { useAppState } from '../context/AppStateContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Search'>;
+  route: RouteProp<RootStackParamList, 'Search'>;
 };
 
-type Tab = 'videos' | 'playlists';
+type Tab = 'videos' | 'playlists' | 'channels';
 
-export function SearchScreen({ navigation }: Props) {
+export function SearchScreen({ navigation, route }: Props) {
   const { isParentUnlocked, relock, resetUnlockTimer } = useAppState();
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
   const isFocused = useIsFocused();
-  const [query, setQuery] = useState('');
+  const themeKeyword = route?.params?.themeKeyword;
+  const isThemeMode = !!themeKeyword;
+  const [query, setQuery] = useState(themeKeyword ?? '');
   const [results, setResults] = useState<VideoResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +49,10 @@ export function SearchScreen({ navigation }: Props) {
 
   useEffect(() => {
     loadInitialData();
+    // Auto-search if a theme keyword was passed
+    if (themeKeyword) {
+      performSearch(themeKeyword, 'videos');
+    }
   }, []);
 
   useEffect(() => {
@@ -67,6 +79,9 @@ export function SearchScreen({ navigation }: Props) {
     try {
       if (noApiKey) {
         setResults(getMockResults());
+      } else if (searchTab === 'channels') {
+        const data = await YouTubeService.searchChannels(searchQuery);
+        setResults(data);
       } else {
         const type = searchTab === 'playlists' ? 'playlist' : 'video';
         const data = await YouTubeService.search(searchQuery, type);
@@ -75,7 +90,7 @@ export function SearchScreen({ navigation }: Props) {
       await StorageService.addRecentSearch(searchQuery);
       const searches = await StorageService.getRecentSearches();
       setRecentSearches(searches);
-    } catch (e: any) {
+    } catch {
       setError('Zoeken mislukt. Controleer je internetverbinding.');
     } finally {
       setLoading(false);
@@ -91,7 +106,17 @@ export function SearchScreen({ navigation }: Props) {
 
   const handleResultPress = (video: VideoResult) => {
     resetUnlockTimer();
-    navigation.navigate('VideoSetup', { video });
+    if (video.type === 'channel') {
+      navigation.navigate('ChannelVideos', {
+        channelId: video.channelId ?? video.id,
+        title: video.title,
+        thumbnail: video.thumbnail,
+      });
+    } else if (video.type === 'playlist') {
+      navigation.navigate('PlaylistVideos', { playlistId: video.id, title: video.title });
+    } else {
+      navigation.navigate('VideoSetup', { video });
+    }
   };
 
   const handleSettingsPress = () => {
@@ -104,7 +129,7 @@ export function SearchScreen({ navigation }: Props) {
     if (hasSearched) {
       return (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>🔍</Text>
+          <Search size={40} color={COLORS.textMuted} style={{ marginBottom: 4 }} />
           <Text style={styles.emptyTitle}>Geen resultaten</Text>
           <Text style={styles.emptySubtitle}>Probeer een andere zoekterm</Text>
         </View>
@@ -128,9 +153,9 @@ export function SearchScreen({ navigation }: Props) {
                     performSearch(s, tab);
                   }}
                 >
-                  <Text style={styles.recentIcon}>🕐</Text>
+                  <Clock size={14} color={COLORS.textMuted} />
                   <Text style={styles.recentText}>{s}</Text>
-                  <Text style={styles.recentChevron}>›</Text>
+                  <ChevronRight size={16} color={COLORS.textMuted} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -146,7 +171,7 @@ export function SearchScreen({ navigation }: Props) {
         )}
         {noApiKey && (
           <View style={styles.apiKeyWarning}>
-            <Text style={styles.apiKeyWarningEmoji}>⚙️</Text>
+            <Settings size={32} color={COLORS.accent} style={{ marginBottom: 8 }} />
             <Text style={styles.apiKeyWarningTitle}>Demo Mode</Text>
             <Text style={styles.apiKeyWarningText}>
               Add your YouTube Data API key in{'\n'}
@@ -167,7 +192,7 @@ export function SearchScreen({ navigation }: Props) {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={[{ flex: 1 }, isIPad && { maxWidth: 640, alignSelf: 'center', width: '100%' }]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
         {/* Header */}
@@ -176,76 +201,86 @@ export function SearchScreen({ navigation }: Props) {
             onPress={() => { relock(); navigation.navigate('LockedHome'); }}
             style={styles.headerIconBtn}>
             <View style={styles.headerIconWrap}>
-              <Text style={styles.headerBackText}>‹</Text>
+              <ChevronLeft size={22} color={COLORS.textSecondary} />
             </View>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Kies een video</Text>
           <TouchableOpacity onPress={handleSettingsPress} style={styles.headerIconBtn}>
             <View style={styles.headerIconWrap}>
-              <Text style={styles.headerIconText}>⚙</Text>
+              <Settings size={18} color={COLORS.textSecondary} />
             </View>
           </TouchableOpacity>
         </View>
-
-        {/* Search bar */}
-        <View style={styles.searchRow}>
-          <View style={styles.searchBar}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Zoek op YouTube..."
-              placeholderTextColor={COLORS.textMuted}
-              value={query}
-              onChangeText={setQuery}
-              onSubmitEditing={() => performSearch(query, tab)}
-              returnKeyType="search"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            {query.length > 0 && (
-              <TouchableOpacity
-                style={styles.clearButton}
-                onPress={() => { setQuery(''); setResults([]); setHasSearched(false); }}>
-                <Text style={styles.clearButtonText}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Tabs */}
-        <View style={styles.tabsRow}>
-          <View style={styles.tabsContainer}>
-            {(['videos', 'playlists'] as Tab[]).map(t => (
-              <TouchableOpacity
-                key={t}
-                style={[styles.tab, tab === t && styles.tabActive]}
-                onPress={() => handleTabChange(t)}>
-                <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
-                  {t === 'videos' ? "Video's" : 'Afspeellijsten'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {error && (
-          <View style={styles.errorBanner}>
-            <Text style={styles.errorText}>⚠ {error}</Text>
-          </View>
-        )}
-
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={COLORS.primary} />
-            <Text style={styles.loadingText}>Zoeken...</Text>
-          </View>
-        )}
 
         <FlatList
           data={results}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
             <SearchResultCard item={item} onPress={handleResultPress} />
+          )}
+          ListHeaderComponent={() => (
+            <>
+              {/* Theme mode banner */}
+              {isThemeMode && (
+                <View style={styles.themeBanner}>
+                  <Text style={styles.themeBannerText}>🎲 Willekeurig thema: zoekresultaten voor "{themeKeyword}"</Text>
+                </View>
+              )}
+
+              {/* Search bar */}
+              <View style={styles.searchRow}>
+                <View style={styles.searchBar}>
+                  <Search size={16} color={COLORS.textMuted} style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={styles.searchInput}
+                    placeholder="Zoek op YouTube..."
+                    placeholderTextColor={COLORS.textMuted}
+                    value={query}
+                    onChangeText={setQuery}
+                    onSubmitEditing={() => performSearch(query, tab)}
+                    returnKeyType="search"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                  />
+                  {query.length > 0 && (
+                    <TouchableOpacity
+                      style={styles.clearButton}
+                      onPress={() => { setQuery(''); setResults([]); setHasSearched(false); }}>
+                      <X size={12} color={COLORS.textSecondary} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+
+              {/* Tabs */}
+              <View style={styles.tabsRow}>
+                <View style={styles.tabsContainer}>
+                  {(['videos', 'playlists', 'channels'] as Tab[]).map(t => (
+                    <TouchableOpacity
+                      key={t}
+                      style={[styles.tab, tab === t && styles.tabActive]}
+                      onPress={() => handleTabChange(t)}>
+                      <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
+                        {t === 'videos' ? "Video's" : t === 'playlists' ? 'Afspeellijsten' : 'Kanalen'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {error && (
+                <View style={styles.errorBanner}>
+                  <Text style={styles.errorText}>⚠ {error}</Text>
+                </View>
+              )}
+
+              {loading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={COLORS.primary} />
+                  <Text style={styles.loadingText}>Zoeken...</Text>
+                </View>
+              )}
+            </>
           )}
           ListEmptyComponent={renderEmpty}
           contentContainerStyle={styles.list}
@@ -309,13 +344,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.07,
     shadowRadius: 4,
     elevation: 2},
-  headerIconText: {
-    fontSize: FONTS.sizes.md,
-    color: COLORS.textSecondary},
-  headerBackText: {
-    fontSize: 28,
-    color: COLORS.textSecondary,
-    lineHeight: 32},
   headerTitle: {
     flex: 1,
     textAlign: 'center',
@@ -340,7 +368,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 1},
-  searchIcon: { fontSize: 16, marginRight: 8 },
   searchInput: {
     flex: 1,
     fontSize: FONTS.sizes.md,
@@ -353,10 +380,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center'},
-  clearButtonText: {
-    fontSize: 10,
-    color: COLORS.textSecondary,
-    fontWeight: '600'},
   tabsRow: {
     paddingHorizontal: 16,
     paddingBottom: 10},
@@ -405,7 +428,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 60,
     gap: 8},
-  emptyEmoji: { fontSize: 40, marginBottom: 4 },
   emptyTitle: {
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',
@@ -441,15 +463,26 @@ const styles = StyleSheet.create({
     gap: 10},
   recentItemLast: {
     borderBottomWidth: 0},
-  recentIcon: { fontSize: 14 },
   recentText: {
     flex: 1,
     fontSize: FONTS.sizes.md,
     color: COLORS.textPrimary,
     fontWeight: '400'},
-  recentChevron: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.textMuted},
+  themeBanner: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  themeBannerText: {
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.primary,
+    fontWeight: '500',
+  },
   apiKeyWarning: {
     marginHorizontal: 16,
     marginTop: 32,
@@ -464,7 +497,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2},
-  apiKeyWarningEmoji: { fontSize: 32, marginBottom: 8 },
   apiKeyWarningTitle: {
     fontSize: FONTS.sizes.lg,
     fontWeight: '700',

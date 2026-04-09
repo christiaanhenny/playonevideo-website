@@ -6,17 +6,23 @@ import {
   StyleSheet,
   StatusBar,
   FlatList,
+  ScrollView,
   TextInput,
   Modal,
   KeyboardAvoidingView,
-  Platform} from 'react-native';
+  Platform,
+  useWindowDimensions} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Settings, Lock, Search, Shuffle } from 'lucide-react-native';
+import { AppLogo } from '../components/AppLogo';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { RootStackParamList, Folder } from '../types';
+import { RootStackParamList, Folder, TimeSlot } from '../types';
 import { COLORS, FONTS } from '../constants';
 import { StorageService } from '../services/StorageService';
-import { DonationService } from '../services/DonationService';
+import { useAppState } from '../context/AppStateContext';
+import { useParentAuth } from '../hooks/useParentAuth';
+import { EmptyChildrenIllustration } from '../components/EmptyChildrenIllustration';
 
 // Track whether initial app-open auth has been done this session
 let initialAuthDone = false;
@@ -25,19 +31,36 @@ type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'LockedHome'>;
 };
 
-const CHILD_COLORS = ['#4F7FFF', '#FF6B6B', '#43D19E', '#FF9F43', '#A55EEA', '#26C6DA'];
 const FACE_EMOJIS = ['👦', '👧', '👶', '🧒', '🧑', '👱', '👦🏽', '👧🏽', '👦🏿', '👧🏿', '🧒🏽', '🐣'];
 
+function isWithinTimeSlot(slot: TimeSlot): boolean {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = slot.startHour * 60 + slot.startMinute;
+  const endMinutes = slot.endHour * 60 + slot.endMinute;
+  return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+}
+
+function formatTime(h: number, m: number): string {
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+}
+
 export function LockedHomeScreen({ navigation }: Props) {
+  const { setActiveChildId } = useAppState();
+  const { navigateWithAuth } = useParentAuth();
   const [children, setChildren] = useState<Folder[]>([]);
   const [showNewChild, setShowNewChild] = useState(false);
   const [newChildName, setNewChildName] = useState('');
   const [newChildEmoji, setNewChildEmoji] = useState('👦');
 
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
+  const gridColumns = isIPad ? 3 : 2;
+
   useEffect(() => {
     if (!initialAuthDone) {
       initialAuthDone = true;
-      navigation.navigate('ParentAuth', { returnTo: 'LockedHome' });
+      navigateWithAuth('LockedHome');
     }
     init();
   }, []);
@@ -50,23 +73,29 @@ export function LockedHomeScreen({ navigation }: Props) {
 
   const init = async () => {
     await StorageService.incrementAppOpenCount();
-    const showDonation = await DonationService.shouldShowPrompt();
-    if (showDonation) {
-      navigation.navigate('DonationPrompt');
-    }
   };
 
   const loadChildren = async () => {
     const f = await StorageService.getFolders();
-    setChildren(f.filter(folder => folder.videos.length > 0));
+    setChildren(f);
   };
 
   const handleChildPress = (child: Folder) => {
+    // Check time slot
+    if (child.timeSlot?.enabled && !isWithinTimeSlot(child.timeSlot)) {
+      return; // Card is visually locked, tap does nothing
+    }
+    setActiveChildId(child.id);
     navigation.navigate('FolderVideos', { folderId: child.id });
   };
 
   const handleSearch = () => {
-    navigation.navigate('ParentAuth', { returnTo: 'Search' });
+    navigateWithAuth('Search');
+  };
+
+  const handleSurpriseMe = (child: Folder) => {
+    if (!child.themeKeyword) return;
+    navigateWithAuth('Search', { themeKeyword: child.themeKeyword });
   };
 
   const handleCreateChild = async () => {
@@ -79,18 +108,43 @@ export function LockedHomeScreen({ navigation }: Props) {
     loadChildren();
   };
 
-  const renderChild = ({ item, index }: { item: Folder; index: number }) => {
-    const color = CHILD_COLORS[index % CHILD_COLORS.length];
+  const renderChild = ({ item }: { item: Folder; index: number }) => {
+    const slotLocked = item.timeSlot?.enabled && !isWithinTimeSlot(item.timeSlot);
+
     return (
       <TouchableOpacity
-        style={[styles.childCard, { backgroundColor: color }]}
+        style={[styles.childCard, slotLocked && styles.childCardLocked]}
         onPress={() => handleChildPress(item)}
-        activeOpacity={0.88}>
-        <Text style={styles.childEmoji}>{item.emoji}</Text>
-        <Text style={styles.childName} numberOfLines={1}>{item.name}</Text>
-        <Text style={styles.childCount}>
-          {item.videos.length} {item.videos.length === 1 ? "video" : "video's"}
+        activeOpacity={slotLocked ? 1 : 0.88}>
+        {slotLocked && (
+          <View style={styles.lockBadge}>
+            <Lock size={14} color={COLORS.textMuted} />
+          </View>
+        )}
+        <Text style={[styles.childEmoji, slotLocked && { opacity: 0.4 }]}>{item.emoji}</Text>
+        <Text style={[styles.childName, slotLocked && { opacity: 0.4 }]} numberOfLines={1}>
+          {item.name}
         </Text>
+        {slotLocked ? (
+          <Text style={styles.slotLockedText}>
+            {`Vanaf ${formatTime(item.timeSlot!.startHour, item.timeSlot!.startMinute)}`}
+          </Text>
+        ) : (
+          <Text style={styles.childCount}>
+            {item.videos.length === 0 ? "Nog geen video's" : `${item.videos.length} ${item.videos.length === 1 ? 'video' : "video's"}`}
+          </Text>
+        )}
+
+        {/* Verras me knop */}
+        {!slotLocked && item.themeKeyword && (
+          <TouchableOpacity
+            style={styles.surpriseBtn}
+            onPress={() => handleSurpriseMe(item)}
+            activeOpacity={0.8}>
+            <Shuffle size={11} color={COLORS.textSecondary} />
+            <Text style={styles.surpriseBtnText}>Verras me!</Text>
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
     );
   };
@@ -98,45 +152,63 @@ export function LockedHomeScreen({ navigation }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <View style={[styles.content, isIPad && styles.contentIPad]}>
 
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoRow}>
-          <View style={styles.logo}>
-            <Text style={styles.logoIcon}>▶</Text>
-          </View>
+          <AppLogo size={36} />
           <Text style={styles.appName}>PlayOneVideo</Text>
         </View>
-        <View style={styles.headerActions}>
+        <TouchableOpacity
+          style={styles.headerIconBtn}
+          onPress={() => navigateWithAuth('Settings')}
+          activeOpacity={0.85}>
+          <View style={styles.headerIconWrap}>
+            <Settings size={18} color={COLORS.textSecondary} />
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      {/* Zoekbalk */}
+      <TouchableOpacity
+        style={styles.searchBar}
+        onPress={handleSearch}
+        activeOpacity={0.88}>
+        <Search size={16} color={COLORS.textMuted} style={{ marginRight: 8 }} />
+        <Text style={styles.searchPlaceholder}>Video zoeken op YouTube...</Text>
+      </TouchableOpacity>
+
+      {/* Kinderen sectie-header — alleen zichtbaar als er kinderen zijn */}
+      {children.length > 0 && (
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Kinderen</Text>
           <TouchableOpacity
             style={styles.addChildBtn}
             onPress={() => setShowNewChild(true)}
             activeOpacity={0.85}>
-            <Text style={styles.addChildBtnText}>+ Kind</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.settingsBtn}
-            onPress={() => navigation.navigate('ParentAuth', { returnTo: 'Settings' })}
-            activeOpacity={0.85}>
-            <Text style={styles.settingsBtnIcon}>⚙</Text>
+            <Text style={styles.addChildBtnText}>＋ Kind toevoegen</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      )}
 
       {/* Children grid or empty state */}
       {children.length > 0 ? (
         <FlatList
+          key={String(gridColumns)}
           data={children}
           keyExtractor={item => item.id}
           renderItem={renderChild}
-          numColumns={2}
+          numColumns={gridColumns}
           contentContainerStyle={styles.grid}
           columnWrapperStyle={styles.gridRow}
           showsVerticalScrollIndicator={false}
         />
       ) : (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>👨‍👩‍👧</Text>
+        <ScrollView
+          contentContainerStyle={styles.emptyState}
+          showsVerticalScrollIndicator={false}>
+          <EmptyChildrenIllustration size={180} />
           <Text style={styles.emptyTitle}>Voeg een kind toe</Text>
           <Text style={styles.emptySubtitle}>
             Maak een profiel aan voor elk kind en zoek video's die bij hen passen.
@@ -146,19 +218,10 @@ export function LockedHomeScreen({ navigation }: Props) {
             onPress={() => setShowNewChild(true)}>
             <Text style={styles.emptyAddBtnText}>+ Kind toevoegen</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       )}
 
-      {/* Zoek-knop onderaan */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={handleSearch}
-          activeOpacity={0.88}>
-          <Text style={styles.searchButtonIcon}>🔍</Text>
-          <Text style={styles.searchButtonText}>Video zoeken</Text>
-        </TouchableOpacity>
-      </View>
+      </View>{/* /content */}
 
       {/* Nieuw kind modal */}
       <Modal
@@ -167,12 +230,12 @@ export function LockedHomeScreen({ navigation }: Props) {
         animationType="slide"
         onRequestClose={() => setShowNewChild(false)}>
         <TouchableOpacity
-          style={styles.modalOverlay}
+          style={[styles.modalOverlay, isIPad && styles.modalOverlayIPad]}
           activeOpacity={1}
           onPress={() => setShowNewChild(false)}>
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-            <View style={styles.modalSheet}>
+            <View style={[styles.modalSheet, isIPad && styles.modalSheetIPad]}>
               <View style={styles.modalHandle} />
               <Text style={styles.modalTitle}>Kind toevoegen</Text>
 
@@ -233,56 +296,64 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12},
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10},
-  logo: {
+    paddingHorizontal: 16,
+    paddingVertical: 10},
+  headerIconBtn: { padding: 4 },
+  headerIconWrap: {
     width: 44,
     height: 44,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-    justifyContent: 'center'},
-  logoIcon: { fontSize: 20, color: '#fff', marginLeft: 2 },
-  appName: {
-    fontSize: FONTS.sizes.xl,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    letterSpacing: -0.5},
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8},
-  addChildBtn: {
-    backgroundColor: COLORS.primary,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 4},
-  addChildBtnText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: FONTS.sizes.sm},
-  settingsBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    borderRadius: 22,
     backgroundColor: COLORS.surface,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.07,
+    shadowRadius: 4,
+    elevation: 2},
+  addIcon: {
+    fontSize: 20,
+    color: COLORS.textSecondary,
+    fontWeight: '400',
+    lineHeight: 24},
+  logoRow: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    gap: 10},
+  logo: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    overflow: 'hidden'},
+  appName: {
+    fontSize: FONTS.sizes.lg,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3},
+
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginTop: 32,
+    marginBottom: 12},
+  sectionTitle: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '700',
+    color: COLORS.textPrimary},
+  addChildBtn: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 20,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
     borderWidth: 1.5,
     borderColor: COLORS.border},
-  settingsBtnIcon: {
-    fontSize: 18,
+  addChildBtnText: {
+    fontSize: FONTS.sizes.sm,
+    fontWeight: '600',
     color: COLORS.textSecondary},
 
   grid: {
@@ -292,26 +363,57 @@ const styles = StyleSheet.create({
   gridRow: { gap: 12, marginBottom: 12 },
   childCard: {
     flex: 1,
-    borderRadius: 22,
-    padding: 20,
+    borderRadius: 14,
+    padding: 16,
     alignItems: 'center',
-    minHeight: 155,
+    minHeight: 110,
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5},
-  childEmoji: { fontSize: 52 },
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2},
+  childCardLocked: {
+    opacity: 0.5,
+  },
+  lockBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 10,
+  },
+  childEmoji: { fontSize: 32 },
   childName: {
-    fontSize: FONTS.sizes.md,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: FONTS.sizes.sm,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
     textAlign: 'center'},
   childCount: {
     fontSize: FONTS.sizes.xs,
-    color: 'rgba(255,255,255,0.8)'},
+    color: COLORS.textMuted},
+  slotLockedText: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.textMuted,
+    fontWeight: '500',
+  },
+  surpriseBtn: {
+    marginTop: 4,
+    backgroundColor: COLORS.background,
+    borderRadius: 10,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  surpriseBtnText: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.textSecondary,
+    fontWeight: '600',
+  },
 
   emptyState: {
     flex: 1,
@@ -341,29 +443,26 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: FONTS.sizes.md},
 
-  footer: {
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-    paddingTop: 8},
-  searchButton: {
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: COLORS.primary,
-    paddingVertical: 18,
-    borderRadius: 18,
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6},
-  searchButtonIcon: { fontSize: 20 },
-  searchButtonText: {
-    fontSize: FONTS.sizes.lg,
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: 0.2},
+    marginHorizontal: 16,
+    marginBottom: 0,
+    backgroundColor: COLORS.surface,
+    borderRadius: 24,
+    paddingHorizontal: 14,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    height: 50,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1},
+  searchPlaceholder: {
+    flex: 1,
+    fontSize: FONTS.sizes.md,
+    color: COLORS.textMuted},
 
   // Modal (slide from bottom)
   modalOverlay: {
@@ -441,4 +540,16 @@ const styles = StyleSheet.create({
   modalCreateText: {
     fontSize: FONTS.sizes.md,
     color: '#fff',
-    fontWeight: '700'}});
+    fontWeight: '700'},
+
+  content: { flex: 1 },
+  contentIPad: { maxWidth: 640, alignSelf: 'center', width: '100%' },
+
+  modalOverlayIPad: { justifyContent: 'center', alignItems: 'center' },
+  modalSheetIPad: {
+    borderRadius: 24,
+    maxWidth: 520,
+    width: '90%',
+    alignSelf: 'center',
+  },
+});

@@ -13,8 +13,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, Folder } from '../types';
-import { COLORS, FONTS } from '../constants';
+import { COLORS, FONTS, FREE_FOLDER_LIMIT } from '../constants';
 import { StorageService } from '../services/StorageService';
+import { ChevronLeft, X, FolderOpen } from 'lucide-react-native';
+import { useAppState } from '../context/AppStateContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ManageFolders'>;
@@ -23,6 +25,7 @@ type Props = {
 const EMOJI_OPTIONS = ['👦', '👧', '👶', '🧒', '🧑', '👱', '👦🏽', '👧🏽', '🧒🏽', '🐣', '⭐', '🦁'];
 
 export function ManageFoldersScreen({ navigation }: Props) {
+  const { isPremium } = useAppState();
   const [folders, setFolders] = useState<Folder[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
@@ -39,6 +42,10 @@ export function ManageFoldersScreen({ navigation }: Props) {
   };
 
   const openCreate = () => {
+    if (!isPremium && folders.length >= FREE_FOLDER_LIMIT) {
+      navigation.navigate('Paywall');
+      return;
+    }
     setNewName('');
     setNewEmoji('📁');
     setEditingFolder(null);
@@ -99,7 +106,7 @@ export function ManageFoldersScreen({ navigation }: Props) {
           <Text style={styles.editBtnText}>Bewerk</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.deleteBtn} onPress={() => handleDelete(item)}>
-          <Text style={styles.deleteBtnText}>✕</Text>
+          <X size={18} color={COLORS.error} />
         </TouchableOpacity>
       </View>
 
@@ -114,14 +121,14 @@ export function ManageFoldersScreen({ navigation }: Props) {
             .replace(/&lt;/g, '<')
             .replace(/&gt;/g, '>')}
           </Text>
-          <TouchableOpacity onPress={() => handleRemoveVideo(item.id, video.id)}>
-            <Text style={styles.removeVideo}>✕</Text>
+          <TouchableOpacity onPress={() => handleRemoveVideo(item.id, video.id)} style={{ padding: 4 }}>
+            <X size={14} color={COLORS.error} />
           </TouchableOpacity>
         </View>
       ))}
 
       {item.videos.length === 0 && (
-        <Text style={styles.emptyFolder}>Nog geen video's — voeg toe via Zoeken</Text>
+        <Text style={styles.emptyFolder}>Nog geen video's. Voeg toe via Zoeken.</Text>
       )}
     </View>
   );
@@ -132,7 +139,8 @@ export function ManageFoldersScreen({ navigation }: Props) {
 
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>‹ Terug</Text>
+          <ChevronLeft size={18} color={COLORS.accent} />
+          <Text style={styles.backText}>Terug</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Kinderen beheren</Text>
         <TouchableOpacity style={styles.addBtn} onPress={openCreate}>
@@ -148,7 +156,7 @@ export function ManageFoldersScreen({ navigation }: Props) {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>📁</Text>
+            <FolderOpen size={48} color={COLORS.textMuted} style={{ marginBottom: 16 }} />
             <Text style={styles.emptyTitle}>Nog geen mappen</Text>
             <Text style={styles.emptySubtitle}>
               Maak een map aan en voeg video's toe via de zoekscherm.
@@ -226,7 +234,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border},
-  backBtn: { paddingRight: 8 },
+  backBtn: { paddingRight: 8, flexDirection: 'row', alignItems: 'center', gap: 2 },
   backText: { fontSize: FONTS.sizes.md, color: COLORS.accent, fontWeight: '500' },
   headerTitle: {
     flex: 1,
@@ -273,7 +281,6 @@ const styles = StyleSheet.create({
     borderRadius: 8},
   editBtnText: { fontSize: FONTS.sizes.xs, color: COLORS.textSecondary, fontWeight: '500' },
   deleteBtn: { padding: 4 },
-  deleteBtnText: { fontSize: FONTS.sizes.md, color: COLORS.error },
   videoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -285,14 +292,12 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: FONTS.sizes.sm,
     color: COLORS.textPrimary},
-  removeVideo: { fontSize: FONTS.sizes.sm, color: COLORS.error, padding: 4 },
   emptyFolder: {
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
     fontStyle: 'italic',
     paddingTop: 4},
   empty: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 32 },
-  emptyEmoji: { fontSize: 48, marginBottom: 16 },
   emptyTitle: {
     fontSize: FONTS.sizes.xl,
     fontWeight: '700',

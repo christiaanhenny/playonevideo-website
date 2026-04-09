@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Keychain from 'react-native-keychain';
-import { AppSettings, Folder, VideoResult } from '../types';
+import { AppSettings, Folder, VideoResult, WatchHistoryEntry } from '../types';
+import { SyncService } from './SyncService';
 
 const KEYS = {
   APP_OPEN_COUNT: 'app_open_count',
@@ -14,6 +15,9 @@ const KEYS = {
   FOLDERS: 'folders',
   PIN_SERVICE: 'ParentVideo.PIN',
   PIN_USERNAME: 'parent',
+  ONBOARDING_COMPLETE: 'onboarding_complete',
+  LAST_REVIEW_PROMPT: 'last_review_prompt',
+  TOTAL_VIDEOS_WATCHED: 'total_videos_watched',
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -46,6 +50,20 @@ export const StorageService = {
 
   async clearPin(): Promise<void> {
     await Keychain.resetGenericPassword({ service: KEYS.PIN_SERVICE });
+  },
+
+  // Onboarding
+  async getOnboardingComplete(): Promise<boolean> {
+    const val = await AsyncStorage.getItem(KEYS.ONBOARDING_COMPLETE);
+    return val === 'true';
+  },
+
+  async setOnboardingComplete(): Promise<void> {
+    await AsyncStorage.setItem(KEYS.ONBOARDING_COMPLETE, 'true');
+  },
+
+  async resetOnboarding(): Promise<void> {
+    await AsyncStorage.removeItem(KEYS.ONBOARDING_COMPLETE);
   },
 
   // Settings
@@ -116,20 +134,29 @@ export const StorageService = {
     return raw ? JSON.parse(raw) : [];
   },
 
+  async saveFavourites(favourites: VideoResult[]): Promise<void> {
+    await AsyncStorage.setItem(KEYS.FAVOURITES, JSON.stringify(favourites));
+    const folders = await StorageService.getFolders();
+    await SyncService.pushLists(folders, favourites);
+  },
+
   async addFavourite(video: VideoResult): Promise<void> {
     const favs = await StorageService.getFavourites();
     const exists = favs.find(f => f.id === video.id);
     if (!exists) {
-      await AsyncStorage.setItem(KEYS.FAVOURITES, JSON.stringify([video, ...favs]));
+      const updated = [video, ...favs];
+      await AsyncStorage.setItem(KEYS.FAVOURITES, JSON.stringify(updated));
+      const folders = await StorageService.getFolders();
+      await SyncService.pushLists(folders, updated);
     }
   },
 
   async removeFavourite(videoId: string): Promise<void> {
     const favs = await StorageService.getFavourites();
-    await AsyncStorage.setItem(
-      KEYS.FAVOURITES,
-      JSON.stringify(favs.filter(f => f.id !== videoId)),
-    );
+    const updated = favs.filter(f => f.id !== videoId);
+    await AsyncStorage.setItem(KEYS.FAVOURITES, JSON.stringify(updated));
+    const folders = await StorageService.getFolders();
+    await SyncService.pushLists(folders, updated);
   },
 
   // Recent searches
@@ -157,6 +184,8 @@ export const StorageService = {
 
   async saveFolders(folders: Folder[]): Promise<void> {
     await AsyncStorage.setItem(KEYS.FOLDERS, JSON.stringify(folders));
+    const favourites = await StorageService.getFavourites();
+    await SyncService.pushLists(folders, favourites);
   },
 
   async createFolder(name: string, emoji: string): Promise<Folder> {
@@ -173,9 +202,20 @@ export const StorageService = {
     );
   },
 
+  async updateFolderSettings(folderId: string, updates: Partial<Folder>): Promise<void> {
+    const folders = await StorageService.getFolders();
+    await StorageService.saveFolders(
+      folders.map(f => f.id === folderId ? { ...f, ...updates } : f),
+    );
+  },
+
   async deleteFolder(folderId: string): Promise<void> {
     const folders = await StorageService.getFolders();
     await StorageService.saveFolders(folders.filter(f => f.id !== folderId));
+    // Clean up related data
+    const dateKey = new Date().toISOString().slice(0, 10);
+    await AsyncStorage.removeItem(`daily_watch_${folderId}_${dateKey}`);
+    await AsyncStorage.removeItem(`watch_history_${folderId}`);
   },
 
   async addVideoToFolder(folderId: string, video: VideoResult): Promise<void> {
@@ -193,5 +233,59 @@ export const StorageService = {
       if (f.id !== folderId) return f;
       return { ...f, videos: f.videos.filter(v => v.id !== videoId) };
     }));
+  },
+
+  // Daily watch count (resets each calendar day)
+  async getDailyWatchCount(folderId: string): Promise<number> {
+    const dateKey = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const val = await AsyncStorage.getItem(`daily_watch_${folderId}_${dateKey}`);
+    return val ? parseInt(val, 10) : 0;
+  },
+
+  async incrementDailyWatchCount(folderId: string): Promise<number> {
+    const dateKey = new Date().toISOString().slice(0, 10);
+    const count = await StorageService.getDailyWatchCount(folderId);
+    const next = count + 1;
+    await AsyncStorage.setItem(`daily_watch_${folderId}_${dateKey}`, String(next));
+    return next;
+  },
+
+  // Watch history (per child)
+  async getWatchHistory(folderId: string): Promise<WatchHistoryEntry[]> {
+    const raw = await AsyncStorage.getItem(`watch_history_${folderId}`);
+    return raw ? JSON.parse(raw) : [];
+  },
+
+  async addWatchHistoryEntry(folderId: string, entry: WatchHistoryEntry): Promise<void> {
+    const history = await StorageService.getWatchHistory(folderId);
+    // Keep last 50 entries
+    const updated = [entry, ...history].slice(0, 50);
+    await AsyncStorage.setItem(`watch_history_${folderId}`, JSON.stringify(updated));
+  },
+
+  async clearWatchHistory(folderId: string): Promise<void> {
+    await AsyncStorage.removeItem(`watch_history_${folderId}`);
+  },
+
+  // Review prompt tracking
+  async getLastReviewPromptTimestamp(): Promise<number | null> {
+    const val = await AsyncStorage.getItem(KEYS.LAST_REVIEW_PROMPT);
+    return val ? parseInt(val, 10) : null;
+  },
+
+  async setLastReviewPromptTimestamp(): Promise<void> {
+    await AsyncStorage.setItem(KEYS.LAST_REVIEW_PROMPT, String(Date.now()));
+  },
+
+  async getTotalVideosWatched(): Promise<number> {
+    const val = await AsyncStorage.getItem(KEYS.TOTAL_VIDEOS_WATCHED);
+    return val ? parseInt(val, 10) : 0;
+  },
+
+  async incrementTotalVideosWatched(): Promise<number> {
+    const count = await StorageService.getTotalVideosWatched();
+    const next = count + 1;
+    await AsyncStorage.setItem(KEYS.TOTAL_VIDEOS_WATCHED, String(next));
+    return next;
   },
 };

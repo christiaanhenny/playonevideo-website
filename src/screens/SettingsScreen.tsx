@@ -10,24 +10,48 @@ import {
   StatusBar} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList, AppSettings } from '../types';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { RootStackParamList, AppSettings, Folder } from '../types';
 import { COLORS, FONTS } from '../constants';
 import { StorageService } from '../services/StorageService';
 import { AuthService } from '../services/AuthService';
+import { SyncService } from '../services/SyncService';
+import { ChevronLeft, ChevronRight, Link2, Play, Crown } from 'lucide-react-native';
+import { PremiumService } from '../services/PremiumService';
+import { useAppState } from '../context/AppStateContext';
+import { useParentAuth } from '../hooks/useParentAuth';
+import { ReviewPromptModal } from '../components/ReviewPromptModal';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Settings'>;
 };
+
+type ReviewEntry = { step: 'rating' | 'feedback'; category?: string };
 
 export function SettingsScreen({ navigation }: Props) {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricType, setBiometricType] = useState<string | null>(null);
   const [hasPin, setHasPin] = useState(false);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [isPaired, setIsPaired] = useState(false);
+  const [subStatus, setSubStatus] = useState<'trial' | 'active' | 'none'>('none');
+  const { isPremium, setIsPremium } = useAppState();
+  const { navigateWithAuth } = useParentAuth();
+  const [reviewEntry, setReviewEntry] = useState<ReviewEntry | null>(null);
 
   useEffect(() => {
     loadSettings();
+    PremiumService.getSubscriptionStatus().then(setSubStatus);
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      StorageService.getFolders().then(setFolders);
+      SyncService.isPaired().then(setIsPaired);
+    }, []),
+  );
 
   const loadSettings = async () => {
     const [s, biometric, type, pinExists] = await Promise.all([
@@ -120,7 +144,8 @@ export function SettingsScreen({ navigation }: Props) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>‹ Terug</Text>
+          <ChevronLeft size={18} color={COLORS.primaryLight} />
+          <Text style={styles.backText}>Terug</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Instellingen</Text>
         <View style={{ width: 70 }} />
@@ -130,15 +155,74 @@ export function SettingsScreen({ navigation }: Props) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
 
+        {/* Gezin — bovenaan voor zichtbaarheid */}
+        <Text style={styles.sectionHeader}>Gezin</Text>
+        <TouchableOpacity
+          style={styles.syncCard}
+          onPress={() => navigation.navigate('FamilySync')}
+          activeOpacity={0.8}>
+          <View style={styles.syncCardLeft}>
+            <Link2 size={20} color={isPaired ? '#2E7D32' : COLORS.textSecondary} />
+            <View style={styles.syncCardText}>
+              <Text style={styles.syncCardTitle}>Apparaten koppelen</Text>
+              <Text style={styles.syncCardSub}>
+                {isPaired
+                  ? 'Gekoppeld, lijsten lopen synchroon'
+                  : 'Koppel de telefoon van je partner via QR'}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.syncCardRight}>
+            {isPaired && <View style={styles.pairedDot} />}
+            <ChevronRight size={18} color={COLORS.textMuted} />
+          </View>
+        </TouchableOpacity>
+
         {/* Kinderen */}
         <Text style={styles.sectionHeader}>Kinderen</Text>
         <View style={styles.card}>
-          <TouchableOpacity
-            style={[styles.actionRow, styles.actionRowLast]}
-            onPress={() => navigation.navigate('ManageFolders')}>
-            <Text style={styles.actionLabel}>👦  Kinderen beheren</Text>
-            <Text style={styles.actionChevron}>›</Text>
-          </TouchableOpacity>
+          {folders.length === 0 ? (
+            <View style={[styles.actionRow, styles.actionRowLast]}>
+              <Text style={[styles.actionLabel, { color: COLORS.textMuted }]}>Nog geen kinderen aangemaakt</Text>
+            </View>
+          ) : (
+            folders.map((f, idx) => (
+              <TouchableOpacity
+                key={f.id}
+                style={[styles.actionRow, idx === folders.length - 1 && styles.actionRowLast]}
+                onPress={() =>
+                  Alert.alert(f.emoji + '  ' + f.name, undefined, [
+                    { text: 'Instellingen', onPress: () => navigation.navigate('ChildSettings', { folderId: f.id }) },
+                    { text: 'Kijkgeschiedenis', onPress: () => navigation.navigate('WatchHistory', { folderId: f.id }) },
+                    {
+                      text: 'Verwijder kind',
+                      style: 'destructive',
+                      onPress: () =>
+                        Alert.alert(
+                          `${f.name} verwijderen?`,
+                          'Dit verwijdert het profiel en alle bijbehorende data.',
+                          [
+                            { text: 'Annuleer', style: 'cancel' },
+                            {
+                              text: 'Verwijder',
+                              style: 'destructive',
+                              onPress: async () => {
+                                await StorageService.deleteFolder(f.id);
+                                setFolders(prev => prev.filter(x => x.id !== f.id));
+                              },
+                            },
+                          ],
+                        ),
+                    },
+                    { text: 'Annuleer', style: 'cancel' },
+                  ])
+                }>
+                <Text style={styles.childEmoji}>{f.emoji}</Text>
+                <Text style={styles.actionLabel}>{f.name}</Text>
+                <ChevronRight size={18} color={COLORS.textMuted} />
+              </TouchableOpacity>
+            ))
+          )}
         </View>
 
         {/* Authentication */}
@@ -153,10 +237,10 @@ export function SettingsScreen({ navigation }: Props) {
             />
           )}
           <TouchableOpacity
-            style={[styles.actionRow, biometricAvailable && styles.actionRowBordered]}
+            style={[styles.actionRow, biometricAvailable && styles.actionRowBordered, styles.actionRowLast]}
             onPress={handleChangePin}>
             <Text style={styles.actionLabel}>{hasPin ? 'Wijzig PIN' : 'PIN instellen'}</Text>
-            <Text style={styles.actionChevron}>›</Text>
+            <ChevronRight size={18} color={COLORS.textMuted} />
           </TouchableOpacity>
         </View>
 
@@ -186,16 +270,57 @@ export function SettingsScreen({ navigation }: Props) {
           />
         </View>
 
-        {/* Support */}
-        <Text style={styles.sectionHeader}>Ondersteuning</Text>
+        {/* Abonnement */}
+        <Text style={styles.sectionHeader}>Abonnement</Text>
         <View style={styles.card}>
-          <Row
-            label="Toon donatieverzoeken"
-            sublabel="Af en toe een herinnering om de app te steunen"
-            value={settings.donationPromptsEnabled}
-            onToggle={v => updateSetting('donationPromptsEnabled', v)}
-            isLast
-          />
+          <View style={[styles.settingRow, styles.settingRowLast]}>
+            <Crown size={16} color={COLORS.textSecondary} style={styles.actionIcon} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.settingLabel}>
+                {subStatus === 'trial' ? 'Gratis proefperiode actief' : subStatus === 'active' ? 'ParentVideo Pro' : 'Gratis versie'}
+              </Text>
+              <Text style={styles.settingSubLabel}>
+                {subStatus === 'trial'
+                  ? '14 dagen gratis, daarna €1,99/maand'
+                  : subStatus === 'active'
+                  ? '€1,99/maand · beheer via Apple ID → Abonnementen'
+                  : 'Upgrade voor onbeperkte profielen en sync'}
+              </Text>
+            </View>
+            {subStatus === 'none' && (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Paywall')}
+                style={styles.upgradeBtn}>
+                <Text style={styles.upgradeBtnText}>Upgrade</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Feedback */}
+        <Text style={styles.sectionHeader}>Feedback</Text>
+        <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => setReviewEntry({ step: 'rating' })}
+            activeOpacity={0.7}>
+            <Text style={styles.actionLabel}>Beoordeel deze app</Text>
+            <ChevronRight size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionRow}
+            onPress={() => setReviewEntry({ step: 'feedback' })}
+            activeOpacity={0.7}>
+            <Text style={styles.actionLabel}>Stuur feedback</Text>
+            <ChevronRight size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionRow, styles.actionRowLast]}
+            onPress={() => setReviewEntry({ step: 'feedback', category: 'Bug' })}
+            activeOpacity={0.7}>
+            <Text style={styles.actionLabel}>Meld een bug</Text>
+            <ChevronRight size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
         </View>
 
         {/* Data */}
@@ -203,12 +328,69 @@ export function SettingsScreen({ navigation }: Props) {
         <View style={styles.card}>
           <TouchableOpacity style={[styles.actionRow, styles.actionRowLast]} onPress={handleClearData}>
             <Text style={[styles.actionLabel, { color: COLORS.error }]}>Sessiedata wissen</Text>
-            <Text style={[styles.actionChevron, { color: COLORS.error }]}>›</Text>
+            <ChevronRight size={18} color={COLORS.error} />
           </TouchableOpacity>
         </View>
 
+        {/* Over */}
+        <Text style={styles.sectionHeader}>Over</Text>
+        <View style={styles.card}>
+          <TouchableOpacity
+            style={[styles.actionRow, styles.actionRowLast]}
+            onPress={() => {
+              Alert.alert(
+                'Introductie opnieuw bekijken',
+                'Wil je de introductie opnieuw starten?',
+                [
+                  { text: 'Annuleer', style: 'cancel' },
+                  {
+                    text: 'Herstart',
+                    onPress: async () => {
+                      await StorageService.resetOnboarding();
+                      navigateWithAuth('Onboarding');
+                    },
+                  },
+                ],
+              );
+            }}>
+            <Play size={16} color={COLORS.textSecondary} fill={COLORS.textSecondary} style={styles.actionIcon} />
+            <Text style={styles.actionLabel}>Introductie opnieuw bekijken</Text>
+            <ChevronRight size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
+        </View>
+
+        {__DEV__ && (
+          <>
+            <Text style={styles.sectionHeader}>Developer</Text>
+            <View style={styles.card}>
+              <View style={[styles.settingRow, styles.settingRowLast]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.settingLabel}>Premium simuleren</Text>
+                  <Text style={styles.settingSubLabel}>
+                    {isPremium ? 'Premium aan, glas actief' : 'Gratis, geen glas'}
+                  </Text>
+                </View>
+                <Switch
+                  value={isPremium}
+                  onValueChange={setIsPremium}
+                  trackColor={{ false: COLORS.border, true: COLORS.primaryLight }}
+                  thumbColor="#fff"
+                  ios_backgroundColor={COLORS.border}
+                />
+              </View>
+            </View>
+          </>
+        )}
+
         <Text style={styles.version}>PlayOneVideo · Gemaakt voor gezinnen</Text>
       </ScrollView>
+
+      <ReviewPromptModal
+        visible={reviewEntry !== null}
+        onDismiss={() => setReviewEntry(null)}
+        initialStep={reviewEntry?.step}
+        initialCategory={reviewEntry?.category}
+      />
     </SafeAreaView>
   );
 }
@@ -223,7 +405,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     backgroundColor: COLORS.background},
-  backBtn: { width: 70 },
+  backBtn: { width: 70, flexDirection: 'row', alignItems: 'center', gap: 2 },
   backText: {
     fontSize: FONTS.sizes.md,
     color: COLORS.primaryLight,
@@ -245,6 +427,36 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     marginTop: 24,
     marginLeft: 4},
+  // Sync card — prominenter dan gewone rij
+  syncCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 1},
+  syncCardLeft: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
+  syncCardText: { flex: 1 },
+  syncCardTitle: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.textPrimary},
+  syncCardSub: {
+    fontSize: FONTS.sizes.xs,
+    color: COLORS.textMuted,
+    marginTop: 2},
+  syncCardRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  pairedDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4CAF50'},
   card: {
     backgroundColor: COLORS.surface,
     borderRadius: 16,
@@ -288,9 +500,7 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.md,
     color: COLORS.textPrimary,
     fontWeight: '500'},
-  actionChevron: {
-    fontSize: FONTS.sizes.xl,
-    color: COLORS.textMuted},
+  actionIcon: { marginRight: 4 },
   badge: {
     backgroundColor: '#EEF2FF',
     paddingHorizontal: 10,
@@ -300,6 +510,21 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.sm,
     color: COLORS.primary,
     fontWeight: '700'},
+  childEmoji: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  upgradeBtn: {
+    backgroundColor: COLORS.primary,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  upgradeBtnText: {
+    fontSize: FONTS.sizes.sm,
+    fontWeight: '700',
+    color: '#fff',
+  },
   version: {
     textAlign: 'center',
     fontSize: FONTS.sizes.xs,

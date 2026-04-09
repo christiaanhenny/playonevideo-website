@@ -46,13 +46,9 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
@@ -61,6 +57,6 @@
 	<key>NSFaceIDUsageDescription</key>
 	<string>PlayOneVideo uses Face ID to protect parent controls from children.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Camera access is not used by this app.</string>
+	<string>Nodig om QR-codes te scannen bij het koppelen van apparaten.</string>
 </dict>
 </plist>

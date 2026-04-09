@@ -12,7 +12,8 @@ import {
   Alert,
   TextInput,
   KeyboardAvoidingView,
-  Platform} from 'react-native';
+  Platform,
+  useWindowDimensions} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
@@ -20,8 +21,10 @@ import { RootStackParamList, Chapter, PlaybackConfig, PlaybackSegment, Folder } 
 import { COLORS, FONTS } from '../constants';
 import { YouTubeService } from '../services/YouTubeService';
 import { parseChaptersFromDescription } from '../services/ChapterParser';
+import { detectChaptersFromTranscript } from '../services/AIChapterService';
 import { StorageService } from '../services/StorageService';
 import { useAppState } from '../context/AppStateContext';
+import { ChevronLeft, ChevronRight, Star, Play, Check, UserPlus } from 'lucide-react-native';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'VideoSetup'>;
@@ -38,23 +41,21 @@ function AddToChildButton({
   singleChildName: string | null;
   onPress: () => void;
 }) {
-  let label: string;
-  let added = false;
-  if (addedToChild) {
-    label = `✓ Toegevoegd aan ${addedToChild}`;
-    added = true;
-  } else if (singleChildName) {
-    label = `Toevoegen aan ${singleChildName}'s map`;
-  } else {
-    label = '👦  Toevoegen aan kind';
-  }
+  const added = !!addedToChild;
   return (
     <TouchableOpacity
       style={[styles.folderButton, added && styles.folderButtonAdded]}
       onPress={onPress}
       activeOpacity={0.8}>
+      {added
+        ? <Check size={16} color={COLORS.success} />
+        : <UserPlus size={16} color={COLORS.textSecondary} />}
       <Text style={[styles.folderButtonText, added && styles.folderButtonTextAdded]}>
-        {label}
+        {added
+          ? `Toegevoegd aan ${addedToChild}`
+          : singleChildName
+            ? `Toevoegen aan ${singleChildName}'s map`
+            : 'Toevoegen aan kind'}
       </Text>
     </TouchableOpacity>
   );
@@ -62,7 +63,9 @@ function AddToChildButton({
 
 export function VideoSetupScreen({ navigation, route }: Props) {
   const { video } = route.params;
-  const { relock, resetUnlockTimer } = useAppState();
+  const { relock, resetUnlockTimer, isPremium } = useAppState();
+  const { width } = useWindowDimensions();
+  const isIPad = width >= 768;
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedChapters, setSelectedChapters] = useState<Set<number>>(new Set());
@@ -71,6 +74,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
   const [totalDurationSeconds, setTotalDurationSeconds] = useState(
     video.durationSeconds ?? 0,
   );
+  const [detectingChapters, setDetectingChapters] = useState(false);
   const [isFavourite, setIsFavourite] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState(false);
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -139,6 +143,27 @@ export function VideoSetupScreen({ navigation, route }: Props) {
     }
   };
 
+  const detectChapters = async () => {
+    setDetectingChapters(true);
+    try {
+      const transcript = await YouTubeService.fetchTranscript(video.id);
+      if (!transcript) {
+        Alert.alert('Geen ondertitels', 'Voor deze video zijn geen ondertitels beschikbaar om hoofdstukken uit te detecteren.');
+        return;
+      }
+      const detected = await detectChaptersFromTranscript(transcript, video.title, totalDurationSeconds);
+      if (detected.length < 2) {
+        Alert.alert('Geen hoofdstukken gevonden', 'De AI kon geen duidelijke afleveringsgrenzen vinden in deze video.');
+        return;
+      }
+      setChapters(detected);
+      setSelectedChapters(new Set(detected.map(c => c.index)));
+      setPlayMode('custom');
+    } finally {
+      setDetectingChapters(false);
+    }
+  };
+
   const checkFavourite = async () => {
     const favs = await StorageService.getFavourites();
     setIsFavourite(favs.some(f => f.id === video.id));
@@ -181,14 +206,30 @@ export function VideoSetupScreen({ navigation, route }: Props) {
     return selected.map(c => ({ startSeconds: c.startSeconds, endSeconds: c.endSeconds }));
   };
 
-  const handleStart = () => {
-    if (playMode === 'custom' && selectedChapters.size === 0) return;
+  const doStart = () => {
     const config: PlaybackConfig = {
       video,
       segments: buildSegments(),
       mode: playMode};
     relock();
     navigation.navigate('Playback', { config });
+  };
+
+  const handleStart = () => {
+    if (playMode === 'custom' && selectedChapters.size === 0) return;
+    if (!isPremium) {
+      Alert.alert(
+        'Gratis versie',
+        'De YouTube-bedieningsknoppen zijn zichtbaar tijdens het afspelen. Upgrade naar Pro voor de kindveilige overlay.',
+        [
+          { text: 'Toch afspelen', onPress: doStart },
+          { text: '14 dagen gratis proberen', onPress: () => navigation.navigate('Paywall') },
+          { text: 'Annuleer', style: 'cancel' },
+        ],
+      );
+      return;
+    }
+    doStart();
   };
 
   const formatSeconds = (s: number) => {
@@ -215,16 +256,17 @@ export function VideoSetupScreen({ navigation, route }: Props) {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <View style={[{ flex: 1 }, isIPad && { maxWidth: 640, alignSelf: 'center', width: '100%' }]}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
         {/* Header bar */}
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-            <Text style={styles.backButtonText}>‹</Text>
+            <ChevronLeft size={22} color={COLORS.textSecondary} />
           </TouchableOpacity>
           <Text style={styles.topBarTitle}>Video instellen</Text>
           <TouchableOpacity style={styles.favButton} onPress={toggleFavourite}>
-            <Text style={styles.favIcon}>{isFavourite ? '★' : '☆'}</Text>
+            <Star size={22} color={COLORS.accent} fill={isFavourite ? COLORS.accent : 'none'} />
           </TouchableOpacity>
         </View>
 
@@ -234,7 +276,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
             <Image source={{ uri: video.thumbnail }} style={styles.thumbnail} resizeMode="cover" />
           ) : (
             <View style={[styles.thumbnail, styles.thumbnailPlaceholder]}>
-              <Text style={styles.thumbnailPlaceholderIcon}>▶</Text>
+              <Play size={48} color={COLORS.textMuted} fill={COLORS.textMuted} />
             </View>
           )}
         </View>
@@ -258,6 +300,22 @@ export function VideoSetupScreen({ navigation, route }: Props) {
             )}
           </View>
         </View>
+
+        {/* AI chapter detection button — shown when no chapters found */}
+        {!loading && chapters.length === 0 && (
+          <TouchableOpacity
+            style={styles.aiDetectButton}
+            onPress={detectChapters}
+            disabled={detectingChapters}
+            activeOpacity={0.7}>
+            {detectingChapters ? (
+              <ActivityIndicator size="small" color={COLORS.textSecondary} />
+            ) : null}
+            <Text style={styles.aiDetectText}>
+              {detectingChapters ? 'Hoofdstukken detecteren…' : 'Hoofdstukken detecteren met AI'}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Playback mode — only shown when video has chapters */}
         {!loading && chapters.length > 0 && (
@@ -341,7 +399,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
                   activeOpacity={0.7}>
                   <View style={[styles.checkbox, selectedChapters.has(chapter.index) && styles.checkboxChecked]}>
                     {selectedChapters.has(chapter.index) && (
-                      <Text style={styles.checkmark}>✓</Text>
+                      <Check size={13} color="#fff" strokeWidth={3} />
                     )}
                   </View>
                   <View style={{ flex: 1 }}>
@@ -382,6 +440,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
         </TouchableOpacity>
 
       </ScrollView>
+      </View>{/* /centered content */}
 
       {/* Folder picker modal */}
       <Modal
@@ -390,9 +449,9 @@ export function VideoSetupScreen({ navigation, route }: Props) {
         animationType="slide"
         onRequestClose={() => setShowFolderModal(false)}>
         <KeyboardAvoidingView
-          style={styles.modalOverlay}
+          style={[styles.modalOverlay, isIPad && styles.modalOverlayIPad]}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <View style={styles.modalSheet}>
+          <View style={[styles.modalSheet, isIPad && styles.modalSheetIPad]}>
             <Text style={styles.modalTitle}>Voeg toe aan map</Text>
 
             {folders.map(folder => (
@@ -405,7 +464,7 @@ export function VideoSetupScreen({ navigation, route }: Props) {
                   <Text style={styles.folderOptionName}>{folder.name}</Text>
                   <Text style={styles.folderOptionCount}>{folder.videos.length} video's</Text>
                 </View>
-                <Text style={styles.folderOptionArrow}>›</Text>
+                <ChevronRight size={20} color={COLORS.textMuted} />
               </TouchableOpacity>
             ))}
 
@@ -466,10 +525,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.07,
     shadowRadius: 4,
     elevation: 2},
-  backButtonText: {
-    fontSize: 26,
-    color: COLORS.textSecondary,
-    lineHeight: 30},
   topBarTitle: {
     flex: 1,
     textAlign: 'center',
@@ -482,7 +537,6 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: 'center',
     justifyContent: 'center'},
-  favIcon: { fontSize: 24, color: COLORS.accent },
   thumbnailWrap: {
     marginHorizontal: 16,
     borderRadius: 16,
@@ -499,9 +553,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center'},
-  thumbnailPlaceholderIcon: {
-    fontSize: 48,
-    color: COLORS.textMuted},
   infoBlock: {
     paddingHorizontal: 16,
     paddingTop: 14,
@@ -600,7 +651,6 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary},
-  checkmark: { color: '#fff', fontSize: 13, fontWeight: '700' },
   chapterTitle: {
     fontSize: FONTS.sizes.sm,
     color: COLORS.textPrimary,
@@ -653,10 +703,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 12,
     paddingVertical: 14,
+    paddingHorizontal: 16,
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: COLORS.border,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     backgroundColor: COLORS.surface},
   folderButtonAdded: {
     borderColor: COLORS.success,
@@ -667,6 +721,25 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary},
   folderButtonTextAdded: {
     color: COLORS.success},
+  aiDetectButton: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 4,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: COLORS.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: COLORS.surface},
+  aiDetectText: {
+    fontSize: FONTS.sizes.md,
+    fontWeight: '600',
+    color: COLORS.textSecondary},
   // Modal
   modalOverlay: {
     flex: 1,
@@ -699,9 +772,6 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.xs,
     color: COLORS.textMuted,
     marginTop: 2},
-  folderOptionArrow: {
-    fontSize: 22,
-    color: COLORS.textMuted},
   newFolderBtn: {
     paddingVertical: 14,
     alignItems: 'center'},
@@ -738,4 +808,13 @@ const styles = StyleSheet.create({
     alignItems: 'center'},
   modalCancelText: {
     fontSize: FONTS.sizes.md,
-    color: COLORS.textMuted}});
+    color: COLORS.textMuted},
+
+  modalOverlayIPad: { justifyContent: 'center', alignItems: 'center' },
+  modalSheetIPad: {
+    borderRadius: 24,
+    maxWidth: 520,
+    width: '90%',
+    alignSelf: 'center',
+  },
+});

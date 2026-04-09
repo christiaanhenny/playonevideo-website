@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList, Folder, VideoResult, PlaybackConfig } from '../types';
 import { COLORS, FONTS } from '../constants';
 import { StorageService } from '../services/StorageService';
+import { useAppState } from '../context/AppStateContext';
+import { useParentAuth } from '../hooks/useParentAuth';
+import { ChevronLeft, Play } from 'lucide-react-native';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'FolderVideos'>;
@@ -39,14 +42,21 @@ function decodeHtml(text: string): string {
 
 export function FolderVideosScreen({ navigation, route }: Props) {
   const { folderId } = route.params;
+  const { setActiveChildId, setLastPlayedVideo } = useAppState();
+  const { navigateWithAuth } = useParentAuth();
   const [folder, setFolder] = useState<Folder | null>(null);
+
+  // Ensure active child is set when this screen mounts
+  useEffect(() => {
+    setActiveChildId(folderId);
+  }, [folderId]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
   const handleAddVideo = () => {
-    navigation.navigate('ParentAuth', { returnTo: 'Search' });
+    navigateWithAuth('Search');
   };
 
   useFocusEffect(
@@ -62,6 +72,7 @@ export function FolderVideosScreen({ navigation, route }: Props) {
   };
 
   const handleVideoPress = (video: VideoResult) => {
+    setLastPlayedVideo(null); // reset before new play
     const config: PlaybackConfig = {
       video,
       segments: [{ startSeconds: 0, endSeconds: video.durationSeconds ?? 7200 }],
@@ -78,12 +89,12 @@ export function FolderVideosScreen({ navigation, route }: Props) {
         <Image source={{ uri: item.thumbnail }} style={styles.thumbnail} resizeMode="cover" />
       ) : (
         <View style={[styles.thumbnail, styles.thumbnailPlaceholder]}>
-          <Text style={styles.thumbnailPlaceholderIcon}>▶</Text>
+          <Play size={28} color={COLORS.textMuted} fill={COLORS.textMuted} />
         </View>
       )}
       <View style={styles.playOverlay}>
         <View style={styles.playCircle}>
-          <Text style={styles.playIcon}>▶</Text>
+          <Play size={16} color="#fff" fill="#fff" />
         </View>
       </View>
       <View style={styles.videoInfo}>
@@ -106,7 +117,7 @@ export function FolderVideosScreen({ navigation, route }: Props) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.iconButton} onPress={handleBack} activeOpacity={0.7}>
-          <Text style={styles.backButtonText}>‹</Text>
+          <ChevronLeft size={22} color={COLORS.textSecondary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.folderEmoji}>{folder.emoji}</Text>
@@ -163,10 +174,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.07,
     shadowRadius: 4,
     elevation: 2},
-  backButtonText: {
-    fontSize: 26,
-    color: COLORS.textSecondary,
-    lineHeight: 30},
   addButtonText: {
     fontSize: 24,
     color: COLORS.primary,
@@ -209,9 +216,6 @@ const styles = StyleSheet.create({
   thumbnailPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center'},
-  thumbnailPlaceholderIcon: {
-    fontSize: 28,
-    color: COLORS.textMuted},
   playOverlay: {
     ...StyleSheet.absoluteFillObject,
     height: THUMB_HEIGHT,
@@ -224,10 +228,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center',
     justifyContent: 'center'},
-  playIcon: {
-    fontSize: 16,
-    color: '#fff',
-    marginLeft: 2},
   videoInfo: {
     padding: 10,
     gap: 4},

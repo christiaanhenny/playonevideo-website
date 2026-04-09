@@ -15,13 +15,14 @@ import { AuthService } from '../services/AuthService';
 import { StorageService } from '../services/StorageService';
 import { useAppState } from '../context/AppStateContext';
 import { PinInput } from '../components/PinInput';
+import { X, KeyRound, ShieldCheck, CircleCheck } from 'lucide-react-native';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'ParentAuth'>;
   route: RouteProp<RootStackParamList, 'ParentAuth'>;
 };
 
-type Mode = 'loading' | 'biometric' | 'pin' | 'setup_pin' | 'confirm_pin' | 'cooldown';
+type Mode = 'loading' | 'pin' | 'setup_pin' | 'confirm_pin' | 'cooldown';
 
 export function ParentAuthScreen({ navigation, route }: Props) {
   const { returnTo, returnParams } = route.params;
@@ -59,8 +60,10 @@ export function ParentAuthScreen({ navigation, route }: Props) {
       return;
     }
 
-    if (biometricAvailable && settings.biometricEnabled) {
-      setMode('biometric');
+    // skipBiometric means the caller already tried Face ID and it failed
+    if (!route.params.skipBiometric && biometricAvailable && settings.biometricEnabled) {
+      // Stay in 'loading' — trigger Face ID directly so only the native
+      // animation shows (no big custom popup underneath).
       triggerBiometric();
     } else {
       setMode('pin');
@@ -153,34 +156,11 @@ export function ParentAuthScreen({ navigation, route }: Props) {
           </View>
         );
 
-      case 'biometric':
-        return (
-          <View style={styles.centeredBlock}>
-            <View style={styles.iconCircle}>
-              <Text style={styles.iconEmoji}>
-                {biometricType === 'Face ID' ? '👤' : '👆'}
-              </Text>
-            </View>
-            <Text style={styles.title}>{biometricType ?? 'Biometrie'}</Text>
-            <Text style={styles.subtitle}>
-              Gebruik {biometricType ?? 'biometrie'} om de oudercontrole te ontgrendelen
-            </Text>
-            <TouchableOpacity style={styles.primaryButton} onPress={triggerBiometric} activeOpacity={0.88}>
-              <Text style={styles.primaryButtonText}>
-                Verifieer met {biometricType ?? 'biometrie'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.linkButton} onPress={() => setMode('pin')}>
-              <Text style={styles.linkText}>Gebruik PIN</Text>
-            </TouchableOpacity>
-          </View>
-        );
-
       case 'pin':
         return (
           <View style={styles.centeredBlock}>
             <View style={styles.iconCircle}>
-              <Text style={styles.iconEmoji}>🔐</Text>
+              <KeyRound size={38} color={COLORS.primary} />
             </View>
             <Text style={styles.title}>Voer PIN in</Text>
             <Text style={styles.subtitle}>Jouw 4-cijferige ouder-PIN</Text>
@@ -197,7 +177,7 @@ export function ParentAuthScreen({ navigation, route }: Props) {
         return (
           <View style={styles.centeredBlock}>
             <View style={styles.iconCircle}>
-              <Text style={styles.iconEmoji}>🛡️</Text>
+              <ShieldCheck size={38} color={COLORS.primary} />
             </View>
             <Text style={styles.title}>Maak een PIN</Text>
             <Text style={styles.subtitle}>
@@ -211,7 +191,7 @@ export function ParentAuthScreen({ navigation, route }: Props) {
         return (
           <View style={styles.centeredBlock}>
             <View style={styles.iconCircle}>
-              <Text style={styles.iconEmoji}>✅</Text>
+              <CircleCheck size={38} color={COLORS.success} />
             </View>
             <Text style={styles.title}>Bevestig PIN</Text>
             <Text style={styles.subtitle}>Voer dezelfde PIN nogmaals in</Text>
@@ -247,7 +227,7 @@ export function ParentAuthScreen({ navigation, route }: Props) {
             navigation.goBack();
           }
         }}>
-          <Text style={styles.closeText}>✕</Text>
+          <X size={16} color={COLORS.textSecondary} />
         </TouchableOpacity>
         {renderContent()}
       </ScrollView>
@@ -273,10 +253,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center'},
-  closeText: {
-    fontSize: FONTS.sizes.sm,
-    color: COLORS.textSecondary,
-    fontWeight: '600'},
   centeredBlock: {
     alignItems: 'center',
     width: '100%',
@@ -296,7 +272,6 @@ const styles = StyleSheet.create({
     elevation: 3},
   iconCircleError: {
     backgroundColor: COLORS.error},
-  iconEmoji: { fontSize: 38 },
   cooldownNumber: {
     fontSize: FONTS.sizes.xxl,
     fontWeight: '800',

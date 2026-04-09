@@ -6,6 +6,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { COLORS, FONTS } from '../constants';
+import { Delete } from 'lucide-react-native';
 
 interface Props {
   length?: 4 | 6;
@@ -67,13 +68,16 @@ export function PinInput({ length = 4, onComplete, error }: Props) {
             disabled={digit === ''}
             activeOpacity={0.55}
           >
-            <Text style={[
-              styles.keyText,
-              digit === '⌫' && styles.keyBackspace,
-              digit === '' && styles.keyHidden,
-            ]}>
-              {digit}
-            </Text>
+            {digit === '⌫' ? (
+              <Delete size={22} color={COLORS.textSecondary} />
+            ) : (
+              <Text style={[
+                styles.keyText,
+                digit === '' && styles.keyHidden,
+              ]}>
+                {digit}
+              </Text>
+            )}
           </TouchableOpacity>
         ))}
       </View>
@@ -147,9 +151,5 @@ const styles = StyleSheet.create({
     fontSize: FONTS.sizes.xl,
     fontWeight: '500',
     color: COLORS.textPrimary,
-  },
-  keyBackspace: {
-    fontSize: FONTS.sizes.lg,
-    color: COLORS.textSecondary,
   },
 });

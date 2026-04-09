@@ -1,19 +1,19 @@
 export const COLORS = {
-  background: '#F8F7FF',
+  background: '#EFEFEF',
   surface: '#FFFFFF',
-  primary: '#4338CA',
-  primaryLight: '#6366F1',
-  primaryDark: '#3730A3',
-  accent: '#F59E0B',
-  accentLight: '#FDE68A',
-  textPrimary: '#0F172A',
-  textSecondary: '#475569',
-  textMuted: '#94A3B8',
-  border: '#E2E8F0',
-  success: '#10B981',
-  error: '#EF4444',
+  primary: '#3A3A3A',     // dark grey — no color at all
+  primaryLight: '#555555',
+  primaryDark: '#1C1C1C',
+  accent: '#8E8E93',
+  accentLight: '#C7C7CC',
+  textPrimary: '#111111',
+  textSecondary: '#555555',
+  textMuted: '#999999',
+  border: '#D1D1D1',
+  success: '#555555',
+  error: '#CC0000',
   overlay: 'rgba(0,0,0,0.5)',
-  finishedBg: '#07071A',
+  finishedBg: '#111111',
 };
 
 export const FONTS = {
@@ -38,5 +38,7 @@ export const DONATION_SUPPRESS_AFTER_DONATE_DAYS = 30;
 
 export const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 
-// Replace with your YouTube Data API v3 key
-export const YOUTUBE_API_KEY = 'AIzaSyDV_qrY7F__GuaB4GjkMawU7i1ktOokjr4';
+export { YOUTUBE_API_KEY, OPENAI_API_KEY, REVENUECAT_API_KEY } from './secrets';
+
+export const PREMIUM_ENTITLEMENT_ID = 'premium';
+export const FREE_FOLDER_LIMIT = 1;
