@@ -19,13 +19,34 @@
     <a class="nav-logo" href="/">
       <img src="icon.png" alt="PlayOneVideo" style="width:28px;height:28px;border-radius:7px;vertical-align:middle;margin-right:8px;">PlayOneVideo
     </a>
-    <ul class="nav-links">
+    <ul class="nav-links" id="nav-links">
       <li><a href="/affiliate.html" data-i18n="navAffiliate">Word affiliate</a></li>
       <li><a href="/privacy.html" data-i18n="navPrivacy">Privacy</a></li>
       <li><a href="/terms.html" data-i18n="navTerms">Voorwaarden</a></li>
     </ul>
+    <button class="hamburger" id="hamburger-btn" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
+<script>
+  (function() {
+    var btn = document.getElementById('hamburger-btn');
+    var menu = document.getElementById('nav-links');
+    btn.addEventListener('click', function() {
+      var open = menu.classList.toggle('is-open');
+      btn.classList.toggle('is-open', open);
+      btn.setAttribute('aria-expanded', open);
+    });
+    document.addEventListener('click', function(e) {
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove('is-open');
+        btn.classList.remove('is-open');
+        btn.setAttribute('aria-expanded', false);
+      }
+    });
+  })();
+</script>
 
 <!-- ── Scherm 1: Hero ─────────────────────────────────────────────────────── -->
 <div class="wrap">
