@@ -154,19 +154,42 @@ section {
   max-width: 520px;
 }
 
-/* ─── Problem callout ────────────────────────────────────────────────────── */
-.callout {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px 32px;
+/* ─── Problem list ───────────────────────────────────────────────────────── */
+.problem-list {
+  list-style: none;
+  counter-reset: problem-counter;
   margin-top: 28px;
-  font-size: 17px;
-  line-height: 1.75;
-  color: var(--muted);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.callout strong { color: var(--text); }
+.problem-list li {
+  counter-increment: problem-counter;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.problem-list li::before {
+  content: counter(problem-counter);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+}
 
 /* ─── Steps ──────────────────────────────────────────────────────────────── */
 .steps {

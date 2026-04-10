@@ -85,7 +85,7 @@ const STEPS: Step[] = [
   {
     id: 'intro',
     icon: 'logo',
-    title: 'Één filmpje.\nGeen gedoe.',
+    title: 'Laat kinderen\néén filmpje kijken.',
     subtitle: 'Geen eindeloze afspeellijsten.\nGeen doorklikkende kinderen.\nGeen ruzie.',
   },
   {
