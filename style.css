@@ -99,6 +99,13 @@ nav {
   line-height: 1.6;
 }
 
+.store-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+
 .btn-appstore {
   display: inline-flex;
   align-items: center;
