@@ -270,6 +270,28 @@ section {
   color: var(--text);
 }
 
+/* ─── Strikethrough list ─────────────────────────────────────────────────── */
+.strikethrough-list {
+  list-style: none;
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.strikethrough-list li {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-align: center;
+  letter-spacing: -0.2px;
+}
+
 /* ─── Feature grid ───────────────────────────────────────────────────────── */
 .features {
   display: grid;
