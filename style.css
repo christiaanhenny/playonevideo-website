@@ -167,6 +167,7 @@ section {
   text-transform: uppercase;
   color: var(--muted);
   margin-bottom: 16px;
+  text-align: center;
 }
 
 .section-title {
@@ -175,6 +176,7 @@ section {
   letter-spacing: -0.5px;
   line-height: 1.2;
   margin-bottom: 16px;
+  text-align: center;
 }
 
 .section-body {
@@ -182,6 +184,9 @@ section {
   color: var(--muted);
   line-height: 1.7;
   max-width: 520px;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ─── Problem list ───────────────────────────────────────────────────────── */
@@ -193,6 +198,9 @@ section {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .problem-list li {
@@ -227,6 +235,9 @@ section {
   flex-direction: column;
   gap: 12px;
   margin-top: 28px;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .step {
