@@ -398,6 +398,37 @@ footer {
 
 .footer-links a:hover { color: var(--text); opacity: 1; }
 
+/* ─── FAQ ────────────────────────────────────────────────────────────────── */
+.faq-list {
+  margin-top: 28px;
+  max-width: 560px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.faq-item {
+  border-top: 1px solid var(--border);
+  padding: 20px 0;
+}
+
+.faq-item:last-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.faq-q {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.faq-a {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
 /* ─── Legal pages ────────────────────────────────────────────────────────── */
 .legal {
   padding: 56px 0 80px;

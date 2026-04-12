@@ -38,7 +38,7 @@ export const DONATION_SUPPRESS_AFTER_DONATE_DAYS = 30;
 
 export const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 
-export { YOUTUBE_API_KEY, OPENAI_API_KEY, REVENUECAT_API_KEY } from './secrets';
+export { YOUTUBE_API_KEY, REVENUECAT_API_KEY } from './secrets';
 
 export const PREMIUM_ENTITLEMENT_ID = 'premium';
 export const FREE_FOLDER_LIMIT = 1;
