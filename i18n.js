@@ -1,5 +1,7 @@
-/* PlayOneVideo — website i18n */
-(function () {
+/* PlayOneVideo — website i18n.
+   Wordt zowel in de browser ingeladen als door build.js (Node) gelezen
+   om statische locale-subpaths (/nl/, /de/, ...) te genereren. */
+(function (globalScope) {
   const LANGS = {
     en: 'English', nl: 'Nederlands', de: 'Deutsch', fr: 'Français',
     es: 'Español', it: 'Italiano', pt: 'Português', ru: 'Русский',
@@ -101,8 +103,16 @@
   };
 
   function getLang() {
+    // 1. URL-path heeft voorrang: /nl/, /de/ etc. (zie build.js voor gegenereerde subpaths)
+    const pathMatch = location.pathname.match(/^\/([a-z]{2})(\/|$)/i);
+    if (pathMatch) {
+      const code = pathMatch[1].toLowerCase();
+      if (T.navAffiliate[code]) return code;
+    }
+    // 2. Handmatige keuze via selector
     const saved = localStorage.getItem('pov_lang');
     if (saved && T.navAffiliate[saved]) return saved;
+    // 3. Browser default
     const browser = (navigator.language || 'en').substring(0, 2).toLowerCase();
     return T.navAffiliate[browser] ? browser : 'en';
   }
@@ -139,13 +149,21 @@
     return sel;
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const navLinks = document.querySelector('.nav-links');
-    if (navLinks) {
-      const li = document.createElement('li');
-      li.appendChild(buildSelector());
-      navLinks.appendChild(li);
-    }
-    applyLang(getLang());
-  });
-})();
+  // Browser: mount selector + apply language on ready.
+  if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+      const navLinks = document.querySelector('.nav-links');
+      if (navLinks) {
+        const li = document.createElement('li');
+        li.appendChild(buildSelector());
+        navLinks.appendChild(li);
+      }
+      applyLang(getLang());
+    });
+  }
+
+  // Node (build.js): exporteer T + LANGS zodat subpaths gegenereerd kunnen worden.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { T, LANGS };
+  }
+})(typeof globalThis !== 'undefined' ? globalThis : this);

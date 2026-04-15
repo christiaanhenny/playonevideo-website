@@ -398,7 +398,7 @@ footer {
 
 .footer-links a:hover { color: var(--text); opacity: 1; }
 
-/* ─── FAQ ────────────────────────────────────────────────────────────────── */
+/* ─── FAQ (collapsible via <details>/<summary>) ──────────────────────────── */
 .faq-list {
   margin-top: 28px;
   max-width: 560px;
@@ -408,7 +408,7 @@ footer {
 
 .faq-item {
   border-top: 1px solid var(--border);
-  padding: 20px 0;
+  padding: 0;
 }
 
 .faq-item:last-child {
@@ -419,14 +419,37 @@ footer {
   font-size: 16px;
   font-weight: 700;
   color: var(--text);
-  margin-bottom: 8px;
   line-height: 1.4;
+  padding: 20px 32px 20px 0;
+  cursor: pointer;
+  position: relative;
+  list-style: none;
+  min-height: 44px;
+}
+
+.faq-q::-webkit-details-marker { display: none; }
+
+.faq-q::after {
+  content: '+';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.faq-item[open] .faq-q::after {
+  content: '−';
 }
 
 .faq-a {
   font-size: 15px;
   color: var(--muted);
   line-height: 1.7;
+  padding: 0 0 20px;
 }
 
 /* ─── Legal pages ────────────────────────────────────────────────────────── */
