@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Affiliate Program - PlayOneVideo | Earn Per Subscriber</title>
+  <meta name="description" content="Promote PlayOneVideo: your community gets 6 weeks free via your code, you earn commission on every paying subscriber for the first 7 months. Free to join via the app.">
+  <link rel="canonical" href="https://playonevideo.com/ru/affiliate.html">
+  <link rel="alternate" hreflang="x-default" href="https://playonevideo.com/affiliate.html">
+  <link rel="alternate" hreflang="en" href="https://playonevideo.com/affiliate.html">
+  <link rel="alternate" hreflang="nl" href="https://playonevideo.com/nl/affiliate.html">
+  <link rel="alternate" hreflang="de" href="https://playonevideo.com/de/affiliate.html">
+  <link rel="alternate" hreflang="fr" href="https://playonevideo.com/fr/affiliate.html">
+  <link rel="alternate" hreflang="es" href="https://playonevideo.com/es/affiliate.html">
+  <link rel="alternate" hreflang="it" href="https://playonevideo.com/it/affiliate.html">
+  <link rel="alternate" hreflang="pt" href="https://playonevideo.com/pt/affiliate.html">
+  <link rel="alternate" hreflang="ru" href="https://playonevideo.com/ru/affiliate.html">
+  <link rel="alternate" hreflang="ar" href="https://playonevideo.com/ar/affiliate.html">
+  <link rel="alternate" hreflang="zh" href="https://playonevideo.com/zh/affiliate.html">
+  <link rel="alternate" hreflang="ja" href="https://playonevideo.com/ja/affiliate.html">
+  <link rel="alternate" hreflang="ko" href="https://playonevideo.com/ko/affiliate.html">
+  <link rel="alternate" hreflang="hi" href="https://playonevideo.com/hi/affiliate.html">
+  <link rel="alternate" hreflang="id" href="https://playonevideo.com/id/affiliate.html">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="PlayOneVideo">
+  <meta property="og:title" content="Affiliate Program - PlayOneVideo">
+  <meta property="og:description" content="Promote PlayOneVideo: your community gets 6 weeks free via your code, you earn commission on every paying subscriber for the first 7 months. Free to join via the app.">
+  <meta property="og:url" content="https://playonevideo.com/ru/affiliate.html">
+  <meta property="og:image" content="https://playonevideo.com/logo.png">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Affiliate Program - PlayOneVideo">
+  <meta name="twitter:description" content="Promote PlayOneVideo and earn commission on every paying subscriber you refer, for the first 7 months.">
+  <meta name="twitter:image" content="https://playonevideo.com/logo.png">
+
+  <link rel="stylesheet" href="/style.css">
+  <link rel="icon" href="/icon.png" type="image/png">
+
+  <!--
+    Auto-redirect to the localised affiliate page when the user has a preferred
+    non-English language set. Self-guarded so the copy in /nl/affiliate.html,
+    /de/affiliate.html, etc. is inert.
+  -->
+  <script>
+    (function () {
+      if (location.pathname !== '/affiliate.html') return;
+      var SUPPORTED = ['nl','de','fr','es','it','pt','ru','ar','zh','ja','ko','hi','id'];
+      var target = null;
+      try { target = localStorage.getItem('pov_lang'); } catch (e) {}
+      if (!target) target = (navigator.language || 'en').substring(0, 2).toLowerCase();
+      if (target === 'en' || SUPPORTED.indexOf(target) === -1) return;
+      location.replace('/' + target + '/affiliate.html' + location.search + location.hash);
+    })();
+  </script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-logo" href="/">
+      <img src="/icon.png" alt="PlayOneVideo" style="width:28px;height:28px;border-radius:7px;vertical-align:middle;margin-right:8px;">PlayOneVideo
+    </a>
+    <ul class="nav-links">
+      <li><a href="/privacy.html" data-i18n="navPrivacy">Конфиденциальность</a></li>
+      <li><a href="/terms.html" data-i18n="navTerms">Условия</a></li>
+    </ul>
+  </div>
+</nav>
+
+<section style="border-top: none;">
+  <div class="wrap">
+    <p class="section-label" data-i18n="affLabel">Партнёрская программа</p>
+    <h2 class="section-title" data-i18n="affHeading">Расскажите другим родителям. Зарабатывайте на этом.</h2>
+    <p class="section-body" data-i18n="affIntro">Вы блогер, инфлюенсер или активны в родительском сообществе? Продвигайте PlayOneVideo и получайте комиссию за каждого платящего подписчика, которого вы привели, в течение первых 7 месяцев.</p>
+
+    <!-- USP: community krijgt 6 weken gratis via partner-bonus -->
+    <div style="margin-top:28px; background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark,var(--primary)) 100%); color:#fff; border-radius:var(--radius); padding:26px 28px;">
+      <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;opacity:0.75;margin-bottom:8px;" data-i18n="affUspLabel">Дополнительный бонус для вашего сообщества</p>
+      <p style="font-size:26px;font-weight:800;letter-spacing:-0.5px;line-height:1.2;margin-bottom:8px;" data-i18n="affUspHeadline">6 недель бесплатно по вашему коду</p>
+      <p style="font-size:15px;line-height:1.55;opacity:0.9;margin:0;" data-i18n="affUspBody">Подписчики, вводящие ваш промокод, получают 14-дневный пробный период в App Store плюс 1 месяц бонуса через партнёрский буст. Сильнее история, выше конверсия, больше комиссии для вас.</p>
+    </div>
+
+    <!-- Berekening -->
+    <div style="margin-top:32px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px 28px;">
+      <p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:16px;" data-i18n="affCalcLabel">Сколько вы заработаете?</p>
+
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);font-size:15px;" data-i18n="affCalcSubscription">Подписка</span>
+        <span style="font-weight:600;font-size:15px;" data-i18n="affCalcSubscriptionValue">€1,99 в месяц</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);font-size:15px;" data-i18n="affCalcCommission">Комиссия App Store (Apple)</span>
+        <span style="font-weight:600;font-size:15px;">&minus;30%</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);font-size:15px;" data-i18n="affCalcShare">Ваша доля</span>
+        <span style="font-weight:600;font-size:15px;" data-i18n="affCalcShareValue">50% от чистой суммы</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--muted);font-size:15px;" data-i18n="affCalcPeriod">Период на подписчика</span>
+        <span style="font-weight:600;font-size:15px;" data-i18n="affCalcPeriodValue">Первые 7 месяцев</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:14px 0 0;">
+        <span style="font-weight:700;font-size:16px;" data-i18n="affCalcTotal">Итого на подписчика</span>
+        <span style="font-weight:800;font-size:20px;" data-i18n="affCalcTotalValue">около €5,00</span>
+      </div>
+
+      <p style="margin-top:16px;font-size:13px;color:var(--muted);line-height:1.6;border-top:1px solid var(--border);padding-top:16px;" data-i18n="affCalcPlayStoreNote">Через Play Store (Google) комиссия составляет 15% вместо 30%, поэтому итог на подписчика около €5,90. Точная комиссия может отличаться в зависимости от платформы.</p>
+    </div>
+
+    <!-- Hoe werkt het -->
+    <div class="features" style="margin-top:20px;">
+      <div class="feature">
+        <p class="feature-title" data-i18n="affFeat1Title">Ваш собственный промокод</p>
+        <p class="feature-body" data-i18n="affFeat1Body">Вы получаете уникальный код, основанный на вашем имени. Новые подписчики вводят его при регистрации.</p>
+      </div>
+      <div class="feature">
+        <p class="feature-title" data-i18n="affFeat2Title">Активно сразу</p>
+        <p class="feature-body" data-i18n="affFeat2Body">После регистрации вы сразу становитесь активным партнёром. Без ожидания.</p>
+      </div>
+      <div class="feature">
+        <p class="feature-title" data-i18n="affFeat3Title">Ежемесячная выплата</p>
+        <p class="feature-body" data-i18n="affFeat3Body">Комиссия выплачивается ежемесячно банковским переводом на указанный вами IBAN.</p>
+      </div>
+      <div class="feature">
+        <p class="feature-title" data-i18n="affFeat4Title">Подписка не нужна</p>
+        <p class="feature-body" data-i18n="affFeat4Body">Регистрация в партнёрской программе бесплатна, через приложение.</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top:28px;" data-i18n="affCallout">Регистрируйтесь через приложение. Скачайте PlayOneVideo, откройте Настройки и выберите Стать партнёром. Сразу после этого вы активны.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">&copy; 2026 Good Ventures SAGL</span>
+    <ul class="footer-links">
+      <li><a href="/privacy.html" data-i18n="footerPrivacy">Конфиденциальность</a></li>
+      <li><a href="/terms.html" data-i18n="footerTerms">Условия использования</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="/i18n.js"></script>
+</body>
+</html>

@@ -1,13 +1,27 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gebruiksvoorwaarden - PlayOneVideo</title>
-  <meta name="description" content="Gebruiksvoorwaarden van PlayOneVideo.">
+  <title>Terms of Service - PlayOneVideo</title>
+  <meta name="description" content="PlayOneVideo terms of service.">
   <link rel="canonical" href="https://playonevideo.com/terms.html">
+  <link rel="alternate" hreflang="en" href="https://playonevideo.com/terms.html">
+  <link rel="alternate" hreflang="nl" href="https://playonevideo.com/nl/terms.html">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="icon.png" type="image/png">
+
+  <script>
+    (function () {
+      if (location.pathname !== '/terms.html') return;
+      var target = null;
+      try { target = localStorage.getItem('pov_lang'); } catch (e) {}
+      if (!target) target = (navigator.language || 'en').substring(0, 2).toLowerCase();
+      if (target === 'nl') {
+        location.replace('/nl/terms.html' + location.search + location.hash);
+      }
+    })();
+  </script>
 </head>
 <body>
 
@@ -18,7 +32,7 @@
     </a>
     <ul class="nav-links">
       <li><a href="/privacy.html" data-i18n="navPrivacy">Privacy</a></li>
-      <li><a href="/terms.html" data-i18n="navTerms">Voorwaarden</a></li>
+      <li><a href="/terms.html" data-i18n="navTerms">Terms</a></li>
     </ul>
   </div>
 </nav>
@@ -26,103 +40,104 @@
 <div class="wrap">
   <div class="legal">
 
-    <h1>Gebruiksvoorwaarden</h1>
-    <p class="meta">Laatste update: april 2026</p>
+    <h1>Terms of Service</h1>
+    <p class="meta">Last updated: April 2026</p>
 
     <p>
-      Door PlayOneVideo te downloaden of te gebruiken ga je akkoord met deze voorwaarden.
-      Lees ze even door.
+      By downloading or using PlayOneVideo, you agree to these terms. Please take a moment to read them.
     </p>
 
-    <h2>1. De app</h2>
-    <p>
-      PlayOneVideo is een initiatief van <strong>Good Ventures SAGL</strong>,
-      Via Chioso 25, 6983 Magliaso, Zwitserland (KvK-nr. CHE-453.811.708).
-    </p>
-    <p>
-      PlayOneVideo is een iOS-app waarmee ouders hun kinderen gecontroleerd één video tegelijk
-      kunnen laten kijken. De app speelt video's af via YouTube en biedt geen eigen
-      video-content.
+    <p style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--muted);">
+      This English version is a translation provided for convenience. In case of any discrepancy,
+      the <a href="/nl/terms.html">Dutch version</a> prevails.
     </p>
 
-    <h2>2. Wie mag de app gebruiken?</h2>
+    <h2>1. The app</h2>
     <p>
-      De app is bedoeld voor gebruik door volwassenen (ouders of verzorgers).
-      Je moet minimaal 18 jaar oud zijn om een abonnement af te sluiten.
-      Je bent verantwoordelijk voor het toezicht op het gebruik door kinderen.
+      PlayOneVideo is an initiative of <strong>Good Ventures SAGL</strong>,
+      Via Chioso 25, 6983 Magliaso, Switzerland (company no. CHE-453.811.708).
+    </p>
+    <p>
+      PlayOneVideo is an iOS app that lets parents allow their children to watch one video
+      at a time in a controlled way. The app plays videos via YouTube and does not provide its
+      own video content.
     </p>
 
-    <h2>3. Abonnement en betaling</h2>
+    <h2>2. Who can use the app?</h2>
     <p>
-      PlayOneVideo biedt een betaald abonnement aan via Apple In-App Purchase. Hierop zijn
-      de
-      <a href="https://www.apple.com/legal/internet-services/itunes/nl/terms.html" target="_blank" rel="noopener">voorwaarden van Apple</a>
-      van toepassing.
+      The app is intended for use by adults (parents or guardians).
+      You must be at least 18 years old to take out a subscription.
+      You are responsible for supervising children's use.
+    </p>
+
+    <h2>3. Subscription and payment</h2>
+    <p>
+      PlayOneVideo offers a paid subscription via Apple In-App Purchase. The
+      <a href="https://www.apple.com/legal/internet-services/itunes/" target="_blank" rel="noopener">Apple terms</a>
+      apply.
     </p>
     <ul>
-      <li>Het abonnement geldt voor het hele gezin en is deelbaar met een partner.</li>
-      <li>Abonnementen worden automatisch verlengd tenzij je ze opzegt via je Apple ID-instellingen, minimaal 24 uur voor het einde van de periode.</li>
-      <li>Restitutie verloopt conform het beleid van Apple.</li>
+      <li>The subscription applies to the whole family and can be shared with a partner.</li>
+      <li>Subscriptions renew automatically unless you cancel via your Apple ID settings, at least 24 hours before the end of the period.</li>
+      <li>Refunds are handled according to Apple's policy.</li>
     </ul>
 
-    <h2>4. YouTube en content van derden</h2>
+    <h2>4. YouTube and third-party content</h2>
     <p>
-      De app maakt gebruik van de YouTube API. Video's worden aangeboden door YouTube en
-      vallen onder de
-      <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">servicevoorwaarden van YouTube</a>.
-      PlayOneVideo is niet verantwoordelijk voor de inhoud van video's op YouTube.
-      Ouders zijn zelf verantwoordelijk voor de selectie van geschikte content.
+      The app uses the YouTube API. Videos are provided by YouTube and are subject to the
+      <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">YouTube Terms of Service</a>.
+      PlayOneVideo is not responsible for the content of videos on YouTube.
+      Parents are responsible for selecting appropriate content.
     </p>
 
-    <h2>5. Toegestaan gebruik</h2>
-    <p>Je mag de app uitsluitend gebruiken voor persoonlijk, niet-commercieel gebruik. Het is niet toegestaan om:</p>
+    <h2>5. Permitted use</h2>
+    <p>You may use the app solely for personal, non-commercial use. You are not allowed to:</p>
     <ul>
-      <li>de app te reverse-engineeren, kopiëren of distribueren;</li>
-      <li>de app te gebruiken op een manier die in strijd is met wet- of regelgeving;</li>
-      <li>de beveiliging of werking van de app te verstoren.</li>
+      <li>reverse-engineer, copy or distribute the app;</li>
+      <li>use the app in a way that violates any law or regulation;</li>
+      <li>disrupt the security or operation of the app.</li>
     </ul>
 
-    <h2>6. Beschikbaarheid</h2>
+    <h2>6. Availability</h2>
     <p>
-      We streven naar een betrouwbare service, maar garanderen geen ononderbroken beschikbaarheid.
-      We kunnen de app op elk moment aanpassen, updaten of tijdelijk offline halen.
-      Bij beëindiging van de service informeren we je van tevoren.
+      We aim for a reliable service, but do not guarantee uninterrupted availability.
+      We may change, update or temporarily take the app offline at any time.
+      If the service is terminated, we will inform you in advance.
     </p>
 
-    <h2>7. Aansprakelijkheid</h2>
+    <h2>7. Liability</h2>
     <p>
-      PlayOneVideo is een hulpmiddel voor ouders. We zijn niet aansprakelijk voor schade die
-      voortkomt uit het gebruik of het niet beschikbaar zijn van de app, of uit content die
-      via YouTube wordt bekeken.
+      PlayOneVideo is a tool for parents. We are not liable for damage arising from
+      the use or unavailability of the app, or from content viewed through YouTube.
     </p>
     <p>
-      Onze aansprakelijkheid is in alle gevallen beperkt tot het bedrag dat je in de
-      afgelopen 12 maanden aan abonnement hebt betaald.
-    </p>
-
-    <h2>8. Intellectueel eigendom</h2>
-    <p>
-      De app, het ontwerp, de naam PlayOneVideo en alle bijbehorende content zijn eigendom van
-      Good Ventures SAGL. Niets van de app mag worden overgenomen zonder schriftelijke toestemming.
+      Our liability is in all cases limited to the amount you have paid for a subscription
+      in the preceding 12 months.
     </p>
 
-    <h2>9. Toepasselijk recht</h2>
+    <h2>8. Intellectual property</h2>
     <p>
-      Op deze voorwaarden is Zwitsers recht van toepassing.
-      Geschillen worden voorgelegd aan de bevoegde rechter in het kanton Ticino, Zwitserland.
+      The app, its design, the name PlayOneVideo and all associated content are property of
+      Good Ventures SAGL. No part of the app may be copied without written permission.
     </p>
 
-    <h2>10. Wijzigingen</h2>
+    <h2>9. Governing law</h2>
     <p>
-      We kunnen deze voorwaarden aanpassen. Bij wezenlijke wijzigingen informeren we je via
-      een melding in de app of via de App Store. Voortgezet gebruik na een wijziging geldt
-      als akkoord met de nieuwe voorwaarden.
+      These terms are governed by Swiss law.
+      Disputes will be submitted to the competent court in the canton of Ticino, Switzerland.
+    </p>
+
+    <h2>10. Changes</h2>
+    <p>
+      We may amend these terms. For material changes, we will notify you through a
+      message in the app or via the App Store. Continued use after a change constitutes
+      acceptance of the new terms.
     </p>
 
     <h2>11. Contact</h2>
     <p>
       Good Ventures SAGL<br>
-      Via Chioso 25, 6983 Magliaso, Zwitserland<br>
+      Via Chioso 25, 6983 Magliaso, Switzerland<br>
       <a href="mailto:christiaanhenny@gmail.com">christiaanhenny@gmail.com</a>
     </p>
 
@@ -133,8 +148,8 @@
   <div class="footer-inner">
     <span class="footer-copy">&copy; 2026 Good Ventures SAGL</span>
     <ul class="footer-links">
-      <li><a href="/privacy.html" data-i18n="footerPrivacy">Privacybeleid</a></li>
-      <li><a href="/terms.html" data-i18n="footerTerms">Gebruiksvoorwaarden</a></li>
+      <li><a href="/privacy.html" data-i18n="footerPrivacy">Privacy Policy</a></li>
+      <li><a href="/terms.html" data-i18n="footerTerms">Terms of Service</a></li>
     </ul>
   </div>
 </footer>

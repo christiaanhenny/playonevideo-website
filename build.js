@@ -15,16 +15,23 @@ const { T, LANGS } = require('./i18n.js');
 const SITE_URL = 'https://playonevideo.com';
 const LANG_CODES = Object.keys(LANGS);
 
-function localizeHtml(html, lang) {
+// Bepaalt het juiste pad naar privacy/terms voor een specifieke taal.
+// Privacy/terms bestaan alleen in EN (root) en NL (/nl/). Voor alle andere
+// talen val terug op de Engelse versie.
+function privacyPath(lang) { return lang === 'nl' ? '/nl/privacy.html' : '/privacy.html'; }
+function termsPath(lang)   { return lang === 'nl' ? '/nl/terms.html'   : '/terms.html';   }
+
+function localizeHtml(html, lang, pageName) {
   // 1. <html lang="..."> zetten
   let out = html.replace(/<html lang="[a-z]{2}">/i, `<html lang="${lang}">`);
 
-  // 2. Canonical + hreflang zelfreferentie updaten
+  // 2. Canonical + OG URL updaten.
   //    (hreflang-blok laten staan — crawlers willen alle varianten zien)
-  out = out.replace(
-    /<link rel="canonical" href="[^"]+">/,
-    `<link rel="canonical" href="${SITE_URL}/${lang}/">`
-  );
+  const canonicalUrl = pageName === 'index.html'
+    ? `${SITE_URL}/${lang}/`
+    : `${SITE_URL}/${lang}/${pageName}`;
+  out = out.replace(/<link rel="canonical" href="[^"]+">/, `<link rel="canonical" href="${canonicalUrl}">`);
+  out = out.replace(/<meta property="og:url" content="[^"]+">/, `<meta property="og:url" content="${canonicalUrl}">`);
 
   // 3. data-i18n vervangen in tekst-inhoud
   //    Match: <TAG ... data-i18n="KEY" ...>TEKST</TAG>
@@ -41,10 +48,11 @@ function localizeHtml(html, lang) {
     }
   );
 
-  // 4. Pad-prefix voor styles, scripts, images en interne links.
-  //    Omdat de pagina nu op /<lang>/index.html staat, moeten relatieve
-  //    links naar ../ terug, of absoluut worden.
-  out = out.replace(/href="\/(privacy\.html|terms\.html|affiliate\.html)"/g, `href="/$1"`);
+  // 4. Links naar privacy/terms aanpassen per taal (EN fallback voor talen
+  //    zonder eigen vertaling). Affiliate links blijven altijd naar eigen taal.
+  out = out.replace(/href="\/privacy\.html"/g, `href="${privacyPath(lang)}"`);
+  out = out.replace(/href="\/terms\.html"/g, `href="${termsPath(lang)}"`);
+  out = out.replace(/href="\/affiliate\.html"/g, `href="/${lang}/affiliate.html"`);
   out = out.replace(/href="style\.css"/g, `href="/style.css"`);
   out = out.replace(/href="icon\.png"/g, `href="/icon.png"`);
   out = out.replace(/src="logo\.png"/g, `src="/logo.png"`);
@@ -62,18 +70,24 @@ function escapeHtml(s) {
     .replace(/"/g, '&quot;');
 }
 
+// Pagina's die via build.js in alle talen worden pre-gerendered.
+// Privacy/terms NIET: die bestaan alleen in EN (root) en NL (/nl/, handgeschreven).
+const BUILD_PAGES = ['index.html', 'affiliate.html'];
+
 function main() {
-  const source = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
   let generated = 0;
-  for (const lang of LANG_CODES) {
-    if (lang === 'en') continue; // /index.html is de Engelse default
-    const dir = path.join(ROOT, lang);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-    const out = localizeHtml(source, lang);
-    fs.writeFileSync(path.join(dir, 'index.html'), out, 'utf8');
-    generated++;
+  for (const pageName of BUILD_PAGES) {
+    const source = fs.readFileSync(path.join(ROOT, pageName), 'utf8');
+    for (const lang of LANG_CODES) {
+      if (lang === 'en') continue; // /{pageName} blijft de Engelse default
+      const dir = path.join(ROOT, lang);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+      const out = localizeHtml(source, lang, pageName);
+      fs.writeFileSync(path.join(dir, pageName), out, 'utf8');
+      generated++;
+    }
   }
-  console.log(`Generated ${generated} locale pages: ${LANG_CODES.filter(l => l !== 'en').join(', ')}`);
+  console.log(`Generated ${generated} locale pages (${BUILD_PAGES.join(' + ')} × ${LANG_CODES.length - 1} langs).`);
 }
 
 main();

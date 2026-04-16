@@ -1,13 +1,32 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Privacybeleid - PlayOneVideo</title>
-  <meta name="description" content="Privacybeleid van PlayOneVideo.">
+  <title>Privacy Policy - PlayOneVideo</title>
+  <meta name="description" content="PlayOneVideo privacy policy.">
   <link rel="canonical" href="https://playonevideo.com/privacy.html">
+  <link rel="alternate" hreflang="en" href="https://playonevideo.com/privacy.html">
+  <link rel="alternate" hreflang="nl" href="https://playonevideo.com/nl/privacy.html">
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="icon.png" type="image/png">
+
+  <!--
+    Auto-redirect to the Dutch version when the user's stored preference or
+    browser language is Dutch. Self-guarded so the copy in /nl/privacy.html
+    is inert.
+  -->
+  <script>
+    (function () {
+      if (location.pathname !== '/privacy.html') return;
+      var target = null;
+      try { target = localStorage.getItem('pov_lang'); } catch (e) {}
+      if (!target) target = (navigator.language || 'en').substring(0, 2).toLowerCase();
+      if (target === 'nl') {
+        location.replace('/nl/privacy.html' + location.search + location.hash);
+      }
+    })();
+  </script>
 </head>
 <body>
 
@@ -18,7 +37,7 @@
     </a>
     <ul class="nav-links">
       <li><a href="/privacy.html" data-i18n="navPrivacy">Privacy</a></li>
-      <li><a href="/terms.html" data-i18n="navTerms">Voorwaarden</a></li>
+      <li><a href="/terms.html" data-i18n="navTerms">Terms</a></li>
     </ul>
   </div>
 </nav>
@@ -26,162 +45,162 @@
 <div class="wrap">
   <div class="legal">
 
-    <h1>Privacybeleid</h1>
-    <p class="meta">Laatste update: april 2026</p>
+    <h1>Privacy Policy</h1>
+    <p class="meta">Last updated: April 2026</p>
 
     <p>
-      PlayOneVideo is een app voor ouders om hun kinderen rustig één video te laten kijken.
-      We gaan zorgvuldig om met je gegevens. Dit beleid legt uit welke gegevens we verwerken,
-      waarom, en welke rechten je hebt.
+      PlayOneVideo is an app that helps parents let their children calmly watch one video.
+      We handle your data carefully. This policy explains what data we process,
+      why, and which rights you have.
     </p>
 
-    <h2>1. Wie zijn wij?</h2>
+    <h2>1. Who are we?</h2>
     <p>
-      PlayOneVideo is een initiatief van <strong>Good Ventures SAGL</strong>,
-      gevestigd aan Via Chioso 25, 6983 Magliaso, Zwitserland
-      (KvK-nr. CHE-453.811.708).
-      Vragen over je privacy? Stuur een e-mail naar
+      PlayOneVideo is an initiative of <strong>Good Ventures SAGL</strong>,
+      Via Chioso 25, 6983 Magliaso, Switzerland
+      (company no. CHE-453.811.708).
+      Questions about your privacy? Email us at
       <a href="mailto:christiaanhenny@gmail.com">christiaanhenny@gmail.com</a>.
-      Wij zijn niet verplicht een functionaris voor gegevensbescherming (FG/DPO) aan te stellen.
+      We are not required to appoint a Data Protection Officer (DPO).
     </p>
 
-    <h2>2. Welke gegevens verwerken we?</h2>
-    <p>We verwerken zo min mogelijk gegevens. Concreet:</p>
+    <h2>2. Which data do we process?</h2>
+    <p>We process as little data as possible. Specifically:</p>
     <ul>
       <li>
-        <strong>Video-voorkeuren en mappen.</strong>
-        De filmpjes die je toevoegt aan je lijsten worden lokaal op je toestel opgeslagen.
-        Als je koppelt met de telefoon van je partner, worden deze lijsten anoniem gesynchroniseerd
-        via een beveiligde server. Er is geen naam, e-mailadres of account aan gekoppeld.
+        <strong>Video preferences and folders.</strong>
+        The videos you add to your lists are stored locally on your device.
+        When you pair with your partner's phone, these lists are synchronised anonymously
+        via a secure server. No name, email address or account is attached.
       </li>
       <li>
-        <strong>Koppelcode.</strong>
-        Bij het koppelen van twee toestellen wordt een tijdelijke, anonieme koppelcode aangemaakt
-        die na 10 minuten automatisch verloopt. Er worden geen persoonsgegevens opgeslagen.
+        <strong>Pairing code.</strong>
+        When pairing two devices, a temporary, anonymous pairing code is created that
+        automatically expires after 10 minutes. No personal data is stored.
       </li>
       <li>
-        <strong>YouTube-video's.</strong>
-        De app maakt gebruik van de YouTube API om video's te zoeken en af te spelen.
-        Je zoekopdrachten worden verwerkt door Google (YouTube). Hierbij zijn de
-        <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">servicevoorwaarden van YouTube</a>
-        en het
-        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">privacybeleid van Google</a>
-        van toepassing.
+        <strong>YouTube videos.</strong>
+        The app uses the YouTube API to search and play videos.
+        Your search queries are processed by Google (YouTube). The
+        <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">YouTube Terms of Service</a>
+        and
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a>
+        apply.
       </li>
       <li>
-        <strong>Aankopen.</strong>
-        Abonnementen en in-app aankopen verlopen volledig via Apple. We ontvangen geen
-        betaalgegevens. Zie het
-        <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">privacybeleid van Apple</a>.
+        <strong>Purchases.</strong>
+        Subscriptions and in-app purchases are handled entirely by Apple. We do not receive
+        any payment data. See the
+        <a href="https://www.apple.com/legal/privacy/" target="_blank" rel="noopener">Apple Privacy Policy</a>.
       </li>
       <li>
-        <strong>Abonnementsbeheer.</strong>
-        We gebruiken RevenueCat voor het verwerken van abonnementsstatus. RevenueCat ontvangt
-        een anonieme gebruikers-ID en aankoopgegevens van Apple. Er worden geen
-        persoonsgegevens gedeeld. Zie het
-        <a href="https://www.revenuecat.com/privacy/" target="_blank" rel="noopener">privacybeleid van RevenueCat</a>.
+        <strong>Subscription management.</strong>
+        We use RevenueCat to process subscription status. RevenueCat receives an
+        anonymous user ID and purchase data from Apple. No personal data is shared.
+        See the
+        <a href="https://www.revenuecat.com/privacy/" target="_blank" rel="noopener">RevenueCat Privacy Policy</a>.
       </li>
     </ul>
     <p>
-      We verzamelen geen naam, e-mailadres, telefoonnummer, locatie, apparaatidentificatie
-      of andere persoonsgegevens.
+      We do not collect any name, email address, phone number, location, device identifier
+      or other personal data.
     </p>
 
-    <h2>3. Gegevens van kinderen</h2>
+    <h2>3. Children's data</h2>
     <p>
-      PlayOneVideo is een app voor ouders, niet voor kinderen. We verzamelen bewust geen
-      gegevens van kinderen. Er worden geen namen van kinderen opgeslagen op onze servers.
-      Profielnamen die je aanmaakt blijven uitsluitend lokaal op je toestel staan.
+      PlayOneVideo is an app for parents, not for children. We deliberately do not collect
+      data from children. No child names are stored on our servers.
+      Profile names you create stay locally on your device only.
     </p>
     <p>
-      Omdat de app bediend wordt door ouders en wij geen gegevens van kinderen verzamelen,
-      is de Children's Online Privacy Protection Act (COPPA) niet van toepassing.
-      Desondanks behandelen we privacy van minderjarigen met de grootst mogelijke zorgvuldigheid.
+      Because the app is operated by parents and we do not collect any data from children,
+      the Children's Online Privacy Protection Act (COPPA) does not apply.
+      Nevertheless, we treat the privacy of minors with the utmost care.
     </p>
 
-    <h2>4. Waarom verwerken we deze gegevens?</h2>
-    <p>De rechtsgrondslag voor de verwerking is <strong>uitvoering van de overeenkomst</strong> (art. 6 lid 1 sub b AVG):</p>
+    <h2>4. Why do we process this data?</h2>
+    <p>The legal basis for processing is <strong>performance of a contract</strong> (Art. 6(1)(b) GDPR):</p>
     <ul>
       <li>
-        <strong>Synchronisatie tussen apparaten</strong> (koppelen met partner): noodzakelijk voor het leveren van de dienst.
+        <strong>Synchronisation between devices</strong> (pairing with a partner): necessary to provide the service.
       </li>
       <li>
-        <strong>YouTube API</strong>: noodzakelijk voor het zoeken en afspelen van video's, de kernfunctie van de app.
+        <strong>YouTube API</strong>: necessary for searching and playing videos, the app's core function.
       </li>
       <li>
-        <strong>Abonnementsbeheer via RevenueCat</strong>: noodzakelijk voor het verwerken en controleren van je abonnementsstatus.
+        <strong>Subscription management via RevenueCat</strong>: necessary for processing and verifying your subscription status.
       </li>
     </ul>
 
-    <h2>5. Hoe lang bewaren we gegevens?</h2>
+    <h2>5. How long do we keep data?</h2>
     <p>
-      Gesynchroniseerde lijsten worden bewaard zolang je de koppeling actief houdt.
-      Je kunt je data op elk moment verwijderen via de app of door contact op te nemen via
+      Synchronised lists are kept as long as you keep the pairing active.
+      You can delete your data at any time through the app or by contacting
       <a href="mailto:christiaanhenny@gmail.com">christiaanhenny@gmail.com</a>.
-      Tijdelijke koppelcodes worden na 10 minuten automatisch verwijderd.
+      Temporary pairing codes are automatically removed after 10 minutes.
     </p>
 
-    <h2>6. Delen we gegevens met derden?</h2>
-    <p>We delen geen gegevens met derden, behalve:</p>
+    <h2>6. Do we share data with third parties?</h2>
+    <p>We do not share data with third parties, except:</p>
     <ul>
       <li>
-        <strong>Google (YouTube API):</strong> voor het zoeken en afspelen van video's.
-        Google verwerkt zoekverzoeken conform hun eigen privacybeleid.
+        <strong>Google (YouTube API):</strong> for searching and playing videos.
+        Google processes search requests according to its own privacy policy.
       </li>
       <li>
-        <strong>RevenueCat:</strong> voor abonnementsbeheer. Ontvangt een anonieme ID en
-        aankoopstatus. Zie het
-        <a href="https://www.revenuecat.com/privacy/" target="_blank" rel="noopener">privacybeleid van RevenueCat</a>.
+        <strong>RevenueCat:</strong> for subscription management. Receives an anonymous ID
+        and purchase status. See the
+        <a href="https://www.revenuecat.com/privacy/" target="_blank" rel="noopener">RevenueCat Privacy Policy</a>.
       </li>
       <li>
-        <strong>Supabase:</strong> onze hostingpartner voor anonieme synchronisatie.
-        Supabase hanteert strikte beveiligingsstandaarden voor gegevensopslag.
+        <strong>Supabase:</strong> our hosting partner for anonymous synchronisation.
+        Supabase maintains strict security standards for data storage.
       </li>
       <li>
-        <strong>Apple:</strong> voor betalingen en app-distributie.
+        <strong>Apple:</strong> for payments and app distribution.
       </li>
     </ul>
-    <p>We verkopen nooit gegevens aan derden.</p>
+    <p>We never sell data to third parties.</p>
 
-    <h2>7. Beveiliging</h2>
+    <h2>7. Security</h2>
     <p>
-      Alle communicatie met onze server verloopt via HTTPS.
-      Gesynchroniseerde data bevat geen persoonsgegevens en is gekoppeld aan een anonieme ID.
+      All communication with our server goes via HTTPS.
+      Synchronised data contains no personal information and is linked to an anonymous ID.
     </p>
 
-    <h2>8. Jouw rechten</h2>
-    <p>Ongeacht waar je woont, heb je de volgende rechten met betrekking tot je gegevens:</p>
+    <h2>8. Your rights</h2>
+    <p>Regardless of where you live, you have the following rights regarding your data:</p>
     <ul>
-      <li>Recht op inzage van je gegevens.</li>
-      <li>Recht op correctie of verwijdering.</li>
-      <li>Recht op bezwaar tegen verwerking.</li>
-      <li>Recht op dataportabiliteit.</li>
+      <li>Right to access your data.</li>
+      <li>Right to correction or deletion.</li>
+      <li>Right to object to processing.</li>
+      <li>Right to data portability.</li>
     </ul>
     <p>
-      Omdat we geen persoonsgegevens opslaan, is er in de meeste gevallen niets te
-      verstrekken of verwijderen. Neem contact op via
-      <a href="mailto:christiaanhenny@gmail.com">christiaanhenny@gmail.com</a> als je een verzoek wilt indienen.
+      Because we don't store personal data, in most cases there is nothing to
+      provide or delete. Contact us at
+      <a href="mailto:christiaanhenny@gmail.com">christiaanhenny@gmail.com</a> if you wish to submit a request.
     </p>
     <p>
-      Je hebt ook het recht om een klacht in te dienen bij de bevoegde privacytoezichthouder in jouw land.
+      You also have the right to lodge a complaint with the competent privacy authority in your country.
     </p>
 
     <h2>9. Cookies</h2>
     <p>
-      De app gebruikt geen cookies. De website (playonevideo.com) is een statische pagina
-      zonder trackingscookies of analytics.
+      The app does not use cookies. The website (playonevideo.com) is a static page
+      without tracking cookies or analytics.
     </p>
 
-    <h2>10. Wijzigingen</h2>
+    <h2>10. Changes</h2>
     <p>
-      We kunnen dit beleid aanpassen. Bij wezenlijke wijzigingen informeren we je via een
-      update in de App Store. De datum van de laatste update staat bovenaan deze pagina.
+      We may update this policy. For material changes, we will notify you via
+      an App Store update. The date of the latest update is shown at the top of this page.
     </p>
 
     <h2>11. Contact</h2>
     <p>
       Good Ventures SAGL<br>
-      Via Chioso 25, 6983 Magliaso, Zwitserland<br>
+      Via Chioso 25, 6983 Magliaso, Switzerland<br>
       <a href="mailto:christiaanhenny@gmail.com">christiaanhenny@gmail.com</a>
     </p>
 
@@ -192,8 +211,8 @@
   <div class="footer-inner">
     <span class="footer-copy">&copy; 2026 Good Ventures SAGL</span>
     <ul class="footer-links">
-      <li><a href="/privacy.html" data-i18n="footerPrivacy">Privacybeleid</a></li>
-      <li><a href="/terms.html" data-i18n="footerTerms">Gebruiksvoorwaarden</a></li>
+      <li><a href="/privacy.html" data-i18n="footerPrivacy">Privacy Policy</a></li>
+      <li><a href="/terms.html" data-i18n="footerTerms">Terms of Service</a></li>
     </ul>
   </div>
 </footer>
