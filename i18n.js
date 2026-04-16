@@ -130,6 +130,18 @@
     if (sel) sel.value = lang;
   }
 
+  // Op de homepage heeft elke taal een eigen subpath (/nl/, /de/, ...).
+  // Op sub-pagina's (privacy, terms, affiliate) zijn er geen gelokaliseerde
+  // varianten, dus daar valt de switcher terug op tekst-vervanging.
+  function isHomepage(path) {
+    if (path === '/' || path === '/index.html') return true;
+    return /^\/[a-z]{2}\/?$/i.test(path) || /^\/[a-z]{2}\/index\.html$/i.test(path);
+  }
+
+  function urlForLang(lang) {
+    return lang === 'en' ? '/' : '/' + lang + '/';
+  }
+
   function buildSelector() {
     const sel = document.createElement('select');
     sel.id = 'lang-select';
@@ -143,8 +155,17 @@
     });
     sel.value = getLang();
     sel.addEventListener('change', () => {
-      localStorage.setItem('pov_lang', sel.value);
-      applyLang(sel.value);
+      const newLang = sel.value;
+      try { localStorage.setItem('pov_lang', newLang); } catch (e) {}
+      if (isHomepage(location.pathname)) {
+        const target = urlForLang(newLang);
+        const current = location.pathname.replace(/index\.html$/, '');
+        if (target !== current) {
+          location.href = target;
+          return;
+        }
+      }
+      applyLang(newLang);
     });
     return sel;
   }

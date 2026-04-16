@@ -16,6 +16,26 @@
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 
+  <!--
+    Auto-redirect naar taal-subpath bij eerste bezoek aan /.
+    Loopt vóór de rest van de <head> zodat de pagina niet eerst in het Engels flitst.
+    Alleen actief op /, niet op /nl/, /de/, etc.
+  -->
+  <script>
+    (function () {
+      var p = location.pathname;
+      if (p !== '/' && p !== '/index.html') return;
+      var SUPPORTED = ['nl','de','fr','es','it','pt','ru','ar','zh','ja','ko','hi','id'];
+      var target = null;
+      try { target = localStorage.getItem('pov_lang'); } catch (e) {}
+      if (!target) {
+        target = (navigator.language || 'en').substring(0, 2).toLowerCase();
+      }
+      if (target === 'en' || SUPPORTED.indexOf(target) === -1) return;
+      location.replace('/' + target + '/' + location.search + location.hash);
+    })();
+  </script>
+
   <!-- Google Search Console verification -->
   <meta name="google-site-verification" content="uvhvm3X_BrZYG6WuhROJBeX8NaKiFYvXBgWgbV3XIjY" />
 
